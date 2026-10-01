@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌎 GeoGuessr Plates</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #ffc93c;
+    --paint-dim: #8a7233;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-container img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 180px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .study-image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+  }
+
+  .no-image {
+    color: var(--muted);
+
+    font-size: 14px;
+
+    text-align: center;
+
+    padding: 20px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 120px;
+    }
+
+    .image-container {
+      height: 250px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+</style>
+</head>
+
+
+<body>
+
+
+<header>
+
+<a href="index.html" class="back-link">← Volver al Menú</a>
+
+
+    <h1>🌎 GeoGuessr Plates</h1>
+
+    <div class="mode-buttons">
+
+        <button
+            id="quizModeBtn"
+            class="active"
+            onclick="showMode('quiz')">
+
+            🎯 Quiz
+
+        </button>
+
+        <button
+            id="studyModeBtn"
+            onclick="showMode('study')">
+
+            📚 Estudiar
+
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<main>
+
+
+    <!-- =====================================================
+         QUIZ
+    ===================================================== -->
+
+    <section
+        id="quizSection"
+        class="section active">
+
+        <div class="quiz-layout">
+
+            <div class="quiz-container">
+
+                <h2>
+                    ¿De qué país es esta matrícula?
+                </h2>
+
+                <div id="quizContinentLabel" class="quiz-continent-label">
+                    🌐 Todos los continentes
+                </div>
+
+
+            <div class="image-container">
+
+                <img
+                    id="quizImage"
+                    src=""
+                    alt="Matrícula">
+
+            </div>
+
+
+            <!-- BOTONES DE RESPUESTA -->
+
+            <div
+                id="answerButtons"
+                class="answer-buttons">
+
+                <button
+                    id="answerButton1"
+                    class="answer-btn"
+                    onclick="selectAnswer(0)">
+                </button>
+
+                <button
+                    id="answerButton2"
+                    class="answer-btn"
+                    onclick="selectAnswer(1)">
+                </button>
+
+            </div>
+
+
+            <div id="result"></div>
+
+
+            <div id="explanation"></div>
+
+
+            <button
+                id="nextButton"
+                class="next-btn"
+                onclick="nextQuestion()"
+                disabled>
+
+                Siguiente ➜
+
+            </button>
+
+
+            <div class="stats">
+
+                Aciertos:
+                <span id="score">0</span>
+
+                /
+
+                Respondidas:
+                <span id="answered">0</span>
+
+            </div>
+
+            </div>
+
+            <aside class="continent-buttons" aria-label="Seleccionar continente">
+
+                <button
+                    class="continent-btn active"
+                    data-continent="Todos"
+                    onclick="selectQuizContinent('Todos')">
+                    🌐 Todos
+                </button>
+
+                <button
+                    class="continent-btn"
+                    data-continent="America"
+                    onclick="selectQuizContinent('America')">
+                    🌎 América
+                </button>
+
+                <button
+                    class="continent-btn"
+                    data-continent="Europa"
+                    onclick="selectQuizContinent('Europa')">
+                    🌍 Europa
+                </button>
+
+                <button
+                    class="continent-btn"
+                    data-continent="Africa"
+                    onclick="selectQuizContinent('Africa')">
+                    🌍 África
+                </button>
+
+                <button
+                    class="continent-btn"
+                    data-continent="Asia"
+                    onclick="selectQuizContinent('Asia')">
+                    🌏 Asia
+                </button>
+
+            </aside>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ESTUDIAR
+    ===================================================== -->
+
+    <section
+        id="studySection"
+        class="section">
+
+
+        <h2>
+            📚 Estudiar matrículas
+        </h2>
+
+
+        <div class="study-controls">
+
+
+            <input
+                type="text"
+                id="studySearch"
+                placeholder="Buscar país..."
+                oninput="renderStudy()">
+
+
+            <select
+                id="continentFilter"
+                onchange="renderStudy()">
+
+                <option value="Todos">
+                    🌎 Todos
+                </option>
+
+                <option value="America">
+                    🌎 América
+                </option>
+
+                <option value="Europa">
+                    🌍 Europa
+                </option>
+
+                <option value="Asia">
+                    🌏 Asia
+                </option>
+
+                <option value="Africa">
+                    🌍 África
+                </option>
+
+            </select>
+
+
+        </div>
+
+
+        <div
+            id="studyGrid"
+            class="study-grid">
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script>
+
+
+/* =========================================================
+   DATOS DE LOS PAÍSES
+========================================================= */
+
+const countries = [
+
+    /* =====================================================
+       AMÉRICA
+    ===================================================== */
+
+
+    {
+        country: "Guatemala",
+        continent: "America",
+        quizImage: "Placas/America/Guatemala.png",
+        studyImage: "Placas/America/Guatemala2.png",
+        description: "Guatemala tiene matrículas cortas, que cuando se difuminan suelen tener un tinte azul o un toque verde en el lado izquierdo..",
+        tags: ["América", "Centroamérica"]
+    },
+
+
+    {
+        country: "Costa Rica",
+        continent: "America",
+        quizImage: "Placas/America/CostaRica.png",
+        studyImage: "Placas/America/CostaRica2.png",
+        description: "Las placas de matrícula costarricenses suelen ser cortas y blancas con texto azul, lo que les da un tinte azul claro a través del desenfoque.",
+        tags: ["América", "Centroamérica"]
+    },
+
+    {
+        country: "Panamá",
+        continent: "America",
+        quizImage: "Placas/America/Panama.png",
+        studyImage: "Placas/America/Panama2.png",
+        description: "Panamá presenta matrículas cortas, generalmente blancas con una franja turquesa horizontal en la parte superior. En raras ocasiones, la tira puede tener otros colores.",
+        tags: ["América", "Centroamérica"]
+    },
+
+    {
+        country: "Colombia",
+        continent: "America",
+        quizImage: "Placas/America/Colombia.png",
+        studyImage: "Placas/America/Colombia2.png",
+        description: "Las matrículas colombianas suelen ser amarillas.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Ecuador",
+        continent: "America",
+        quizImage: "Placas/America/Ecuador.png",
+        studyImage: "Placas/America/Ecuador2.png",
+        description: "Las placas de matrícula estándar son blancas y pueden ser cortas o largas. En Street View, a menudo verás una mezcla de ambos tamaños. Los vehículos comerciales, como taxis o autobuses, pueden tener placas naranjas macizas más antiguas o otras más nuevas con una barra naranja en la parte superior.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Perú",
+        continent: "America",
+        quizImage: "Placas/America/Peru.png",
+        studyImage: "Placas/America/Peru2.png",
+        description: "Las matrículas peruanas son blancas o amarillas. A diferencia de las placas blancas, es menos probable ver placas amarillas. Además, los taxis en Perú suelen utilizar matrículas amarillas en la parte superior y blancas en la parte inferior.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Bolivia",
+        continent: "America",
+        quizImage: "Placas/America/Bolivia.png",
+        studyImage: "Placas/America/Bolivia2.png",
+        description: "Bolivia tiene matrículas cortas, blancas y con texto azul. El texto azul puede ser difícil de ver a través del desenfoque, por lo que las placas pueden aparecer en blanco liso.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Chile",
+        continent: "America",
+        quizImage: "Placas/America/Chile.png",
+        studyImage: "Placas/America/Chile2.png",
+        description: "Los vehículos normales tienen matrícula blanca, mientras que los vehículos comerciales y de taxi tienen matrícula naranja.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Argentina",
+        continent: "America",
+        quizImage: "Placas/America/Argentina.png",
+        studyImage: "Placas/America/Argentina2.png",
+        description: "Argentina utiliza dos tipos de matrículas: una negra, que será visible en Street View con un punto negro en el medio, y una blanca con una barra azul en la parte superior.",
+        tags: ["América", "Sudamérica"]
+    },
+
+    {
+        country: "Uruguay",
+        continent: "America",
+        quizImage: "Placas/America/Uruguay.png",
+        studyImage: "Placas/America/Uruguay2.png",
+        description: "Las matrículas uruguayas son blancas lisas con caracteres negros.",
+        tags: ["América", "Sudamérica"]
+    },
+
+
+
+    /* =====================================================
+       EUROPA
+    ===================================================== */
+
+    {
+        country: "Albania",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Albania.png",
+        studyImage: "Placas/Europa/Albania2.png",
+        description: "Las matrículas albanesas tienen franjas azules en ambos lados o una única franja roja en el lado izquierdo.",
+        tags: ["Europa"]
+    },
+
+    {
+        country: "Andorra",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Andorra.png",
+        studyImage: "Placas/Europa/Andorra2.png",
+        description: "Las matrículas andorranas tienen un punto naranja en el lado izquierdo y se pueden encontrar regularmente en todo el país.",
+        tags: ["Europa"]
+    },
+
+    {
+        country: "Austria",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Austria.png",
+        studyImage: "Placas/Europa/Austria2.png",
+        description: "Austria tiene matrículas largas y blancas con la franja azul estándar de la UE a la izquierda.",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Bélgica",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Belgica.png",
+        studyImage: "Placas/Europa/Belgica2.png",
+        description: "Las placas de licencia en Bélgica utilizan texto rojo. Puedes reconocer este color distintivo incluso a través del desenfoque.",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Croacia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Croacia.png",
+        studyImage: "Placas/Europa/Croacia2.png",
+        description: "Croacia tiene matrículas largas y blancas. Algunas placas tienen una franja azul a la izquierda, otras son completamente blancas. La mayoría de los coches vistos en la Generación 3 no tendrán una franja azul en sus matrículas. Además, hay una mezcla de automóviles con o sin franjas azules en la Generación 4, siendo las franjas azules más comunes en los automóviles más nuevos.",
+        tags: ["Europa", "Balcanes", "UE"]
+    },
+
+
+    {
+        country: "Dinamarca",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Dinamarca.png",
+        studyImage: "Placas/Europa/Dinamarca2.png",
+        description: "Las placas estándar son largas y blancas, con una franja azul a la izquierda. Las placas comerciales son amarillas. Y las llamadas placas “de loro” tienen una sección amarilla en el lado izquierdo. Estos son exclusivos de Dinamarca.",
+        tags: ["Europa", "Nórdicos", "UE"]
+    },
+
+
+    {
+        country: "Francia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Francia.png",
+        studyImage: "Placas/Europa/Francia2.png",
+        description: "Las placas francesas modernas son largas y blancas, con tiras azules a ambos lados de la placa. La franja izquierda será más visible que la franja derecha. Algunas placas francesas más antiguas carecen de la franja azul adecuada y la placa trasera es amarilla. Estos son muy raros en las coberturas más nuevas.",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Italia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Italia.png",
+        studyImage: "Placas/Europa/Italia2.png",
+        description: "A diferencia de la mayoría de las matrículas europeas, las matrículas italianas tienen franjas azules a ambos lados de la matrícula. Además, la placa frontal es claramente más corta que la mayoría de las placas europeas, lo que, en combinación con las dos tiras, la hace única.",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Liechtenstein",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Liechtenstein.png",
+        studyImage: "Placas/Europa/Liechtenstein2.png",
+        description: "Liechtenstein utiliza placas negras con letras blancas y un emblema amarillo y rojo cerca del lado izquierdo. Cuando estén borrosas, las placas aparecerán grises y los colores del emblema serán visibles.",
+        tags: ["Europa"]
+    },
+
+
+    {
+        country: "Luxemburgo",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Luxemburgo.png",
+        studyImage: "Placas/Europa/Luxemburgo2.png",
+        description: "Luxemburgo utiliza placas largas de color amarillo con una franja azul a la izquierda. Como Luxemburgo es un país pequeño, los coches extranjeros con matrícula blanca son bastante comunes.",
+        tags: ["Europa", "UE"]
+    },
+
+    {
+        country: "Malta",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Malta.png",
+        studyImage: "Placas/Europa/Malta2.png",
+        description: "Como en la mayor parte de Europa, las matrículas maltesas tienen una franja azul a la izquierda. Sin embargo, a diferencia de la mayor parte de Europa, los platos cortos son muy comunes.",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Mónaco",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Monaco.png",
+        studyImage: "Placas/Europa/Monaco2.png",
+        description: "Las matrículas de Mónaco son cortas y carecen de la franja azul. Sin embargo, todavía verás muchos platos franceses normales por ahí. Estos vehículos franceses a menudo todavía tienen las antiguas placas traseras amarillas, debido a la antigüedad de la cobertura de la Generación 2.",
+        tags: ["Europa"]
+    },
+
+    {
+        country: "Montenegro",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Montenegro.png",
+        studyImage: "Placas/Europa/Montenegro2.png",
+        description: "Montenegro utiliza la placa europea estándar con una franja azul y el escudo de armas de Montenegro sobre un círculo rojo. El círculo rojo es visible a través del desenfoque.",
+        tags: ["Europa", "Balcanes"]
+    },
+
+    {
+        country: "Países Bajos",
+        continent: "Europa",
+        quizImage: "Placas/Europa/PaisesBajos.png",
+        studyImage: "Placas/Europa/PaisesBajos2.png",
+        description: "Los Países Bajos tienen matrículas largas y amarillas con la franja azul europea estándar a la izquierda. Los taxis holandeses tienen placas azules.",
+        tags: ["Europa", "UE"]
+    },
+
+    {
+        country: "Macedonia del Norte",
+        continent: "Europa",
+        quizImage: "Placas/Europa/MacedoniaDelNorte.png",
+        studyImage: "Placas/Europa/MacedoniaDelNorte2.png",
+        description: "Las matrículas de Macedonia del Norte son blancas y a veces tienen la franja azul europea estándar a la izquierda. También tienen un notable bloque rojo cerca del lado izquierdo de la matrícula.",
+        tags: ["Europa", "Balcanes"]
+    },
+
+    {
+        country: "Noruega",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Noruega.png",
+        studyImage: "Placas/Europa/Noruega2.png",
+        description: "Noruega tiene placas blancas largas con la franja europea estándar a la izquierda. Las placas comerciales son verdes. Estos se ven a menudo en furgonetas.",
+        tags: ["Europa", "Nórdicos"]
+    },
+
+
+    {
+        country: "Portugal",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Portugal.png",
+        studyImage: "Placas/Europa/Portugal2.png",
+        description: "Las placas portuguesas son largas y blancas, con una franja azul a la izquierda. La mayoría de las placas tienen una franja amarilla a la derecha, exclusiva de Portugal. La franja amarilla se suspendió en 2020, por lo que en la cobertura de la Generación 4 a veces es posible que veas placas solo con la franja azul",
+        tags: ["Europa", "UE"]
+    },
+
+
+    {
+        country: "Rusia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Rusia.png",
+        studyImage: "Placas/Europa/Rusia2.png",
+        description: "Las placas de matrícula rusas son completamente blancas con texto negro.",
+        tags: ["Europa", "Rusia"]
+    },
+
+
+    {
+        country: "Serbia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Serbia.png",
+        studyImage: "Placas/Europa/Serbia2.png",
+        description: "Las matrículas serbias son blancas con una franja azul a la izquierda. Las placas agrícolas, en vehículos como tractores, son verdes.",
+        tags: ["Europa", "Balcanes"]
+    },
+
+
+    {
+        country: "Suecia",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Suecia.png",
+        studyImage: "Placas/Europa/Suecia2.png",
+        description: "Las matrículas suecas son largas, blancas y tienen la franja azul estándar de la UE en el lado izquierdo. Las placas de matrícula de los taxis tienen un fondo amarillo en lugar de blanco.",
+        tags: ["Europa", "Nórdicos", "UE"]
+    },
+
+    {
+        country: "Suiza",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Suiza.png",
+        studyImage: "Placas/Europa/Suiza2.png",
+        description: "Las matrículas suizas difieren sustancialmente de otras matrículas europeas. Son completamente blancos y carecen de la franja azul que se encuentra en la mayoría de los demás países europeos. Las placas frontales son extremadamente cortas en comparación con la mayoría de Europa. Las placas traseras pueden ser largas o altas. En ambos casos el emblema rojo del país se puede ver a la izquierda, mientras que el emblema del cantón se puede ver a la derecha.",
+        tags: ["Europa"]
+    },
+
+
+    {
+        country: "Ucrania",
+        continent: "Europa",
+        quizImage: "Placas/Europa/Ucrania.png",
+        studyImage: "Placas/Europa/Ucrania2.png",
+        description: "Ucrania utiliza matrículas largas y blancas, con una distintiva franja azul y amarilla a la izquierda (los colores de la bandera). También es posible que te encuentres con placas más antiguas, donde el azul y el amarillo son difíciles de detectar.",
+        tags: ["Europa"]
+    },
+
+    {
+        country: "Reino Unido",
+        continent: "Europa",
+        quizImage: "Placas/Europa/ReinoUnido.png",
+        studyImage: "Placas/Europa/ReinoUnido2.png",
+        description: "Las placas delanteras del Reino Unido son blancas, mientras que las placas traseras son amarillas. Algunas placas tienen una franja azul a la izquierda, pero la mayoría no. Además, es posible que veas una placa con una tira verde ‘Cero emisiones’.",
+        tags: ["Europa"]
+    },
+
+
+    /* =====================================================
+       ASIA
+    ===================================================== */
+
+    {
+        country: "Bangladesh",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Bangladesh.png",
+        studyImage: "Placas/Asia/Bangladesh2.png",
+        description: "Las placas de matrícula de Bangladesh son blancas, negras o turquesas.",
+        tags: ["Asia", "Sur de Asia"]
+    },
+
+    {
+        country: "Bután",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Butan.png",
+        studyImage: "Placas/Asia/Butan2.png",
+        description: "Las placas de matrícula en Bután casi siempre son rojas y se pueden ver fácilmente en los vehículos.",
+        tags: ["Asia", "Himalaya"]
+    },
+
+    {
+        country: "Camboya",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Cambodia.png",
+        studyImage: "Placas/Asia/Cambodia2.png",
+        description: "Las placas de licencia son blancas con letras azules. El brillo azul de las letras puede ser difícil de ver a través del desenfoque y las placas pueden aparecer de un blanco liso. Las placas de los vehículos gubernamentales son verdes.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "India",
+        continent: "Asia",
+        quizImage: "Placas/Asia/India.png",
+        studyImage: "Placas/Asia/India2.png",
+        description: "Las placas de matrícula indias suelen ser bastante largas y el diseño más común es el blanco. Los vehículos comerciales suelen utilizar placas amarillas, mientras que los vehículos eléctricos utilizan placas verdes.",
+        tags: ["Asia", "Sur de Asia"]
+    },
+
+    {
+        country: "Indonesia",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Indonesia.png",
+        studyImage: "Placas/Asia/Indonesia2.png",
+        description: "Las placas de matrícula de Indonesia son negras con letras blancas. Las letras suelen aparecer como tres secciones blancas borrosas. Los vehículos comerciales utilizan placas amarillas. Las placas con cobertura más nueva también pueden ser blancas.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Israel",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Israel.png",
+        studyImage: "Placas/Asia/Israel2.png",
+        description: "Las placas de matrícula israelíes son amarillas con una franja azul a la izquierda.",
+        tags: ["Asia", "Medio Oriente"]
+    },
+
+    {
+        country: "Japón",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Japon.png",
+        studyImage: "Placas/Asia/Japon2.png",
+        description: "Japón utiliza una matrícula blanca corta estándar con texto verde. A menudo verá una versión corta amarilla diferente con texto negro emitida para “automóviles ligeros”, también conocidos como Kei Cars.",
+        tags: ["Asia", "Asia Oriental"]
+    },
+
+    {
+        country: "Jordania",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Jordan.png",
+        studyImage: "Placas/Asia/Jordan2.png",
+        description: "Las matrículas jordanas son blancas y pueden ser largas o cortas. Los vehículos de transporte comercial, como los taxis, tienen una distintiva franja verde a la izquierda.",
+        tags: ["Asia", "Medio Oriente"]
+    },
+
+    {
+        country: "Kazajistán",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Kazakhstan.png",
+        studyImage: "Placas/Asia/Kazakhstan2.png",
+        description: "Cuando están borrosas, las matrículas kazajas estándar son en su mayoría blancas, con un pequeño toque de azul en el lado izquierdo.",
+        tags: ["Asia", "Asia Central"]
+    },
+
+    {
+        country: "Kirguistán",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Kyrgyzstan.png",
+        studyImage: "Placas/Asia/Kyrgyzstan2.png",
+        description: "Las placas de licencia en Kirguistán tienen una franja roja.",
+        tags: ["Asia", "Asia Central"]
+    },
+
+    {
+        country: "Laos",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Laos.png",
+        studyImage: "Placas/Asia/Laos2.png",
+        description: "Las matrículas laosianas son cortas y amarillas. Esto los distingue de los vecinos Tailandia y Camboya, que utilizan placas blancas en vehículos no comerciales. Las placas comerciales laosianas son blancas y las placas gubernamentales son azules.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Líbano",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Libano.png",
+        studyImage: "Placas/Asia/Libano2.png",
+        description: "Las placas libanesas estándar son largas con una franja azul a la izquierda, similares a la mayoría de las placas de Europa, o cortas con una franja azul similar. Las placas de matrícula de los taxis son notablemente de color rojo intenso. También podrás encontrar matrículas con otros colores.",
+        tags: ["Asia", "Medio Oriente"]
+    },
+
+    {
+        country: "Malasia",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Malaysia.png",
+        studyImage: "Placas/Asia/Malaysia2.png",
+        description: "Las placas de matrícula de Malasia son negras y generalmente tienen dos secciones blancas. Estos son visibles incluso cuando están borrosos.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Mongolia",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Mongolia.png",
+        studyImage: "Placas/Asia/Mongolia2.png",
+        description: "Las placas de matrícula de Mongolia son en su mayoría blancas con un toque de rojo en el lado izquierdo del símbolo Soyombo.",
+        tags: ["Asia", "Asia Oriental"]
+    },
+
+    {
+        country: "Nepal",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Nepal.png",
+        studyImage: "Placas/Asia/Nepal2.png",
+        description: "Las placas de matrícula nepalesas suelen ser bastante largas y el diseño más común es el blanco. Los vehículos privados utilizan placas rojas, mientras que los vehículos públicos utilizan placas negras.",
+        tags: ["Asia", "Himalaya"]
+    },
+
+    {
+        country: "Omán",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Oman.png",
+        studyImage: "Placas/Asia/Oman2.png",
+        description: "Las placas de matrícula de los vehículos privados son generalmente amarillas, mientras que los vehículos comerciales tienen placas rojas.",
+        tags: ["Asia", "Medio Oriente"]
+    },
+
+    {
+        country: "Pakistán",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Pakistan.png",
+        studyImage: "Placas/Asia/Pakistan2.png",
+        description: "Pakistán utiliza matrículas cortas y cada región tiene su diseño único. Sin embargo, como toda la cobertura se tomó en Punjab, la mayoría de las placas tendrán el diseño de Punjab, con una franja verde en el lado izquierdo. Los platos totalmente verdes también son bastante comunes.",
+        tags: ["Asia", "Sur de Asia"]
+    },
+
+    {
+        country: "Filipinas",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Philipines.png",
+        studyImage: "Placas/Asia/Philipines2.png",
+        description: "Para los vehículos de pasajeros se utilizan matrículas blancas estándar con texto negro. También puedes encontrar muchas placas más antiguas de la serie 2002, que son reconocibles por su tinte verde.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Qatar",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Qatar.png",
+        studyImage: "Placas/Asia/Qatar2.png",
+        description: "Los coches normales en Qatar tienen matrículas largas y blancas con una franja granate a la izquierda. Los camiones tienen matrículas cuadradas y negras y las matrículas policiales son azules.",
+        tags: ["Asia", "Medio Oriente"]
+    },
+
+    {
+        country: "Singapur",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Singapore.png",
+        studyImage: "Placas/Asia/Singapore2.png",
+        description: "La mayoría de las matrículas de Singapur son negras, con texto blanco. Ocasionalmente podrás ver placas blancas y amarillas de estilo británico y muy raramente placas rojas.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Corea del Sur",
+        continent: "Asia",
+        quizImage: "Placas/Asia/CoreadelSur.png",
+        studyImage: "Placas/Asia/CoreadelSur2.png",
+        description: "Corea del Sur utiliza una variedad de matrículas diferentes. Las placas anteriores a 2006 son cortas y verdes. Estos seguirán apareciendo en la cobertura de Street View. Las placas posteriores a 2006 son blancas para vehículos privados y amarillas para vehículos comerciales. Estos pueden ser largos y cortos.",
+        tags: ["Asia", "Asia Oriental"]
+    },
+
+    {
+        country: "Sri Lanka",
+        continent: "Asia",
+        quizImage: "Placas/Asia/SriLanka.png",
+        studyImage: "Placas/Asia/SriLanka2.png",
+        description: "Los vehículos en Sri Lanka tienen placas delanteras blancas largas y placas traseras amarillas cortas.",
+        tags: ["Asia", "Sur de Asia"]
+    },
+
+    {
+        country: "Tailandia",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Thailand.png",
+        studyImage: "Placas/Asia/Thailand2.png",
+        description: "Tailandia utiliza placas de matrícula blancas de gran tamaño en los vehículos de pasajeros y amarillas en los vehículos comerciales.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+    {
+        country: "Vietnam",
+        continent: "Asia",
+        quizImage: "Placas/Asia/Vietnam.png",
+        studyImage: "Placas/Asia/Vietnam2.png",
+        description: "Las placas de matrícula vietnamitas son blancas con letras negras. Se utilizan tanto versiones largas como cortas.",
+        tags: ["Asia", "Sudeste Asiático"]
+    },
+
+
+    /* =====================================================
+       ÁFRICA
+    ===================================================== */
+
+    {
+        country: "Eswatini",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Eswatini.png",
+        studyImage: "Placas/Africa/Eswatini2.png",
+        description: "Las placas de licencia en Eswatini son largas y verdes en la parte inferior.",
+        tags: ["África", "África Austral"]
+    },
+
+    {
+        country: "Ghana",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Ghana.png",
+        studyImage: "Placas/Africa/Ghana2.png",
+        description: "Ghana utiliza placas blancas en los vehículos normales y placas amarillas en los vehículos comerciales. Pueden ser largos o cortos. Debido a que los vehículos comerciales son muy comunes, a menudo verás una mezcla de ambos colores de placas.",
+        tags: ["África", "África Occidental"]
+    },
+
+    {
+        country: "Kenia",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Kenya.png",
+        studyImage: "Placas/Africa/Kenya2.png",
+        description: "Kenia utiliza matrículas largas con frente blanco. La contraparte trasera es cuadrada y amarilla.",
+        tags: ["África", "África Oriental"]
+    },
+
+    {
+        country: "Lesoto",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Lesotho.png",
+        studyImage: "Placas/Africa/Lesotho2.png",
+        description: "Lesotho utiliza placas blancas largas con texto azul. Si está parcialmente desenfocado, es posible que vea el símbolo del sombrero Mokorotlo a la izquierda.",
+        tags: ["África", "África Austral"]
+    },
+
+    {
+        country: "Namibia",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Namibia.png",
+        studyImage: "Placas/Africa/Namibia2.png",
+        description: "Namibia utiliza principalmente matrículas delanteras y traseras amarillas. Las placas de tocador son blancas, con letras azules.",
+        tags: ["África", "África Austral"]
+    },
+
+    {
+        country: "Nigeria",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Nigeria.png",
+        studyImage: "Placas/Africa/Nigeria2.png",
+        description: "Nigeria utiliza matrículas cortas que parecen algo verdes a través del borrón.",
+        tags: ["África", "África Occidental"]
+    },
+
+    {
+        country: "Senegal",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Senegal.png",
+        studyImage: "Placas/Africa/Senegal2.png",
+        description: "LSenegal es el único país africano que utiliza matrículas totalmente azules. Existe una versión más nueva en la Generación 4 que se parece a la matrícula europea estándar, que es blanca con una franja azul a la izquierda.",
+        tags: ["África", "África Occidental"]
+    },
+
+    {
+        country: "Túnez",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Tunisia.png",
+        studyImage: "Placas/Africa/Tunisia2.png",
+        description: "Las matrículas tunecinas son negras con texto blanco.",
+        tags: ["África", "África del Norte"]
+    },
+
+    {
+        country: "Uganda",
+        continent: "Africa",
+        quizImage: "Placas/Africa/Uganda.png",
+        studyImage: "Placas/Africa/Uganda2.png",
+        description: "Uganda utiliza placas delanteras blancas con placas traseras amarillas. Estas placas pueden ser largas o altas.",
+        tags: ["África", "África Oriental"]
+    }
+
+];
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentQuestion = null;
+
+let answerOptions = [];
+
+let score = 0;
+
+let answered = 0;
+
+let questionAnswered = false;
+let selectedQuizContinent = "Todos";
+
+
+/* =========================================================
+   NORMALIZAR TEXTO
+========================================================= */
+
+function normalize(text) {
+
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+
+}
+
+
+/* =========================================================
+   PAÍSES CON IMAGEN DE QUIZ
+========================================================= */
+
+function availableQuizCountries() {
+
+    return countries.filter(country =>
+        country.quizImage &&
+        country.quizImage.trim() !== "" &&
+        (
+            selectedQuizContinent === "Todos" ||
+            country.continent === selectedQuizContinent
+        )
+    );
+
+}
+
+
+/* =========================================================
+   MEZCLAR ARRAY
+========================================================= */
+
+function shuffle(array) {
+
+    const newArray = [...array];
+
+    for (
+        let i = newArray.length - 1;
+        i > 0;
+        i--
+    ) {
+
+        const j =
+            Math.floor(Math.random() * (i + 1));
+
+        [
+            newArray[i],
+            newArray[j]
+        ] =
+        [
+            newArray[j],
+            newArray[i]
+        ];
+
+    }
+
+    return newArray;
+
+}
+
+
+/* =========================================================
+   SELECCIONAR CONTINENTE DEL QUIZ
+========================================================= */
+
+function selectQuizContinent(continent) {
+
+    selectedQuizContinent = continent;
+
+    document.querySelectorAll(".continent-btn").forEach(button => {
+        button.classList.toggle(
+            "active",
+            button.dataset.continent === continent
+        );
+    });
+
+    const label = document.getElementById("quizContinentLabel");
+
+    if (continent === "Todos") {
+        label.textContent = "🌐 Todos los continentes";
+    } else {
+        label.textContent = "Modo: " + getContinentName(continent);
+    }
+
+    nextQuestion();
+}
+
+
+/* =========================================================
+   SIGUIENTE PREGUNTA
+========================================================= */
+
+function nextQuestion() {
+
+    const available =
+        availableQuizCountries();
+
+
+    if (available.length < 2) {
+
+        document.getElementById("quizImage").style.display =
+            "none";
+
+        document.getElementById("result").textContent =
+            selectedQuizContinent === "Todos"
+                ? "Se necesitan al menos 2 países con imágenes."
+                : "Este continente necesita al menos 2 países con imágenes.";
+
+        document.getElementById("explanation").textContent = "";
+        document.getElementById("nextButton").disabled = true;
+
+        return;
+
+    }
+
+
+    const randomIndex =
+        Math.floor(
+            Math.random() * available.length
+        );
+
+
+    currentQuestion =
+        available[randomIndex];
+
+
+    /* Elegir país incorrecto */
+
+    const wrongCountries =
+        available.filter(country =>
+            country.country !==
+            currentQuestion.country
+        );
+
+
+    const wrongCountry =
+        wrongCountries[
+            Math.floor(
+                Math.random() *
+                wrongCountries.length
+            )
+        ];
+
+
+    /* Crear las dos opciones */
+
+    answerOptions =
+        shuffle([
+            currentQuestion,
+            wrongCountry
+        ]);
+
+
+    questionAnswered = false;
+
+
+    /* Mostrar imagen */
+
+    const image =
+        document.getElementById("quizImage");
+
+
+    image.style.display = "block";
+
+    image.src =
+        currentQuestion.quizImage;
+
+    image.alt =
+        "Matrícula";
+
+
+    /* Mostrar botones */
+
+    const button1 =
+        document.getElementById("answerButton1");
+
+    const button2 =
+        document.getElementById("answerButton2");
+
+
+    button1.textContent =
+        answerOptions[0].country;
+
+    button2.textContent =
+        answerOptions[1].country;
+
+
+    /* Resetear botones */
+
+    button1.className =
+        "answer-btn";
+
+    button2.className =
+        "answer-btn";
+
+
+    button1.disabled = false;
+
+    button2.disabled = false;
+
+
+    /* Limpiar resultado */
+
+    document.getElementById("result").textContent =
+        "";
+
+    document.getElementById("explanation").textContent =
+        "";
+
+
+    document.getElementById("nextButton").disabled =
+        true;
+
+}
+
+
+/* =========================================================
+   SELECCIONAR RESPUESTA
+========================================================= */
+
+function selectAnswer(index) {
+
+    if (questionAnswered) {
+        return;
+    }
+
+
+    questionAnswered = true;
+
+    answered++;
+
+
+    const selected =
+        answerOptions[index];
+
+
+    const correct =
+        selected.country ===
+        currentQuestion.country;
+
+
+    const button1 =
+        document.getElementById("answerButton1");
+
+    const button2 =
+        document.getElementById("answerButton2");
+
+
+    /* Desactivar ambos */
+
+    button1.disabled = true;
+
+    button2.disabled = true;
+
+
+    /* Marcar respuesta */
+
+    if (correct) {
+
+        score++;
+
+        if (index === 0) {
+            button1.classList.add("correct");
+        } else {
+            button2.classList.add("correct");
+        }
+
+        document.getElementById("result").textContent =
+            "✅ ¡Correcto!";
+
+    } else {
+
+        if (index === 0) {
+            button1.classList.add("incorrect");
+        } else {
+            button2.classList.add("incorrect");
+        }
+
+
+        /* Marcar también la correcta */
+
+        if (answerOptions[0].country ===
+            currentQuestion.country) {
+
+            button1.classList.add("correct");
+
+        } else {
+
+            button2.classList.add("correct");
+
+        }
+
+
+        document.getElementById("result").textContent =
+            "❌ Incorrecto. La respuesta era " +
+            currentQuestion.country;
+
+    }
+
+
+    /* Explicación */
+
+    document.getElementById("explanation").textContent =
+        currentQuestion.description;
+
+
+    /* Activar siguiente */
+
+    document.getElementById("nextButton").disabled =
+        false;
+
+
+    updateStats();
+
+}
+
+
+/* =========================================================
+   ESTADÍSTICAS
+========================================================= */
+
+function updateStats() {
+
+    document.getElementById("score").textContent =
+        score;
+
+    document.getElementById("answered").textContent =
+        answered;
+
+}
+
+
+/* =========================================================
+   CAMBIAR DE MODO
+========================================================= */
+
+function showMode(mode) {
+
+    const quizSection =
+        document.getElementById("quizSection");
+
+    const studySection =
+        document.getElementById("studySection");
+
+    const quizButton =
+        document.getElementById("quizModeBtn");
+
+    const studyButton =
+        document.getElementById("studyModeBtn");
+
+
+    if (mode === "quiz") {
+
+        quizSection.classList.add("active");
+
+        studySection.classList.remove("active");
+
+        quizButton.classList.add("active");
+
+        studyButton.classList.remove("active");
+
+    } else {
+
+        quizSection.classList.remove("active");
+
+        studySection.classList.add("active");
+
+        quizButton.classList.remove("active");
+
+        studyButton.classList.add("active");
+
+        renderStudy();
+
+    }
+
+}
+
+
+/* =========================================================
+   ESTUDIO
+========================================================= */
+
+function renderStudy() {
+
+    const grid =
+        document.getElementById("studyGrid");
+
+
+    const search =
+        normalize(
+            document.getElementById("studySearch").value
+        );
+
+
+    const continent =
+        document.getElementById("continentFilter").value;
+
+
+    const filtered =
+        countries.filter(country => {
+
+            const matchesSearch =
+                normalize(country.country)
+                    .includes(search);
+
+
+            const matchesContinent =
+                continent === "Todos" ||
+                country.continent === continent;
+
+
+            return matchesSearch &&
+                   matchesContinent;
+
+        });
+
+
+    grid.innerHTML = "";
+
+
+    if (filtered.length === 0) {
+
+        grid.innerHTML = `
+            <div class="no-image">
+                No se encontraron países.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    filtered.forEach(country => {
+
+        const card =
+            document.createElement("div");
+
+
+        card.className =
+            "study-card";
+
+
+        let imageHTML = "";
+
+
+        if (
+            country.studyImage &&
+            country.studyImage.trim() !== ""
+        ) {
+
+            imageHTML = `
+
+                <img
+                    src="${country.studyImage}"
+                    alt="Matrícula de ${country.country}"
+                    onerror="
+                        this.style.display='none';
+                        this.parentElement.innerHTML=
+                        '<div class=\\'no-image\\'>
+                        Imagen de estudio pendiente
+                        </div>'
+                    "
+                >
+
+            `;
+
+        } else {
+
+            imageHTML = `
+
+                <div class="no-image">
+                    Imagen de estudio pendiente
+                </div>
+
+            `;
+
+        }
+
+
+        let tagsHTML = "";
+
+
+        if (country.tags) {
+
+            tagsHTML =
+                country.tags
+                    .map(tag => `
+                        <span class="tag">
+                            ${tag}
+                        </span>
+                    `)
+                    .join("");
+
+        }
+
+
+        const continentName =
+            getContinentName(
+                country.continent
+            );
+
+
+        card.innerHTML = `
+
+            <div class="study-image">
+
+                ${imageHTML}
+
+            </div>
+
+
+            <div class="study-content">
+
+                <h3>
+                    ${country.country}
+                </h3>
+
+
+                <div class="continent">
+
+                    ${continentName}
+
+                </div>
+
+
+                <p>
+
+                    ${country.description}
+
+                </p>
+
+
+                <div class="tags">
+
+                    ${tagsHTML}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        grid.appendChild(card);
+
+    });
+
+}
+
+
+/* =========================================================
+   NOMBRE DEL CONTINENTE
+========================================================= */
+
+function getContinentName(continent) {
+
+    const names = {
+
+        "America": "🌎 América",
+
+        "Europa": "🌍 Europa",
+
+        "Asia": "🌏 Asia",
+
+        "Africa": "🌍 África"
+
+    };
+
+
+    return names[continent] ||
+           continent;
+
+}
+
+
+/* =========================================================
+   INICIAR
+========================================================= */
+
+nextQuestion();
+
+renderStudy();
+
+</script>
+
+</body>
+</html>

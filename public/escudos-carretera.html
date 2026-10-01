@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛡️ GeoGuessr Escudos de Carretera</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #ffc93c;
+    --paint-dim: #8a7233;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-placeholder {
+    color: #8a8d94;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: .02em;
+    border: 2px dashed #c9c6ba;
+    border-radius: 10px;
+    padding: 18px 26px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 150px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .no-image {
+    color: #8a8d94;
+
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+
+    text-align: center;
+
+    padding: 16px;
+    border: 2px dashed #c9c6ba;
+    border-radius: 8px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    padding: 40px 0;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 100px;
+    }
+
+    .image-container {
+      height: 230px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+
+
+<body>
+
+<header>
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <h1>🛡️ Escudos de Carretera</h1>
+  <div class="mode-buttons">
+    <button id="btn-quiz" class="active" onclick="showSection('quiz')">Quiz</button>
+    <button id="btn-study" onclick="showSection('study')">Estudiar</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="section active">
+    <div class="quiz-layout">
+
+      <div class="quiz-container">
+        <div class="quiz-continent-label" id="quiz-continent-label">Mostrando: Todos los continentes</div>
+        <h2>¿A qué país pertenece este escudo de ruta?</h2>
+
+        <div class="image-container" id="quiz-image-container">
+          <div class="image-placeholder">Aquí va la imagen</div>
+        </div>
+
+        <div class="answer-buttons" id="answer-buttons"></div>
+
+        <div id="result"></div>
+        <div id="explanation"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+
+        <div class="stats" id="stats">Aciertos: 0 / 0</div>
+      </div>
+
+      <div class="continent-buttons" id="continent-buttons"></div>
+
+    </div>
+  </section>
+
+  <!-- ============ ESTUDIAR ============ -->
+  <section id="study" class="section">
+    <div class="study-controls">
+      <input type="text" id="search-input" placeholder="Buscar país o pista..." oninput="renderStudyGrid()">
+      <select id="continent-select" onchange="renderStudyGrid()">
+        <option value="Todos">Todos los continentes</option>
+      </select>
+    </div>
+
+    <div class="study-grid" id="study-grid"></div>
+  </section>
+
+</main>
+
+
+<script>
+
+  const routeShields = [
+    {
+      country: "Estados Unidos",
+      continent: "Norteamérica",
+      description: "El escudo de interestatal es azul y rojo con borde blanco y la palabra 'INTERSTATE'; las rutas US usan un escudo blanco con forma de placa. Cada estado además tiene su propio diseño de ruta estatal, muy variado.",
+      tags: ["escudo interestatal azul/rojo", "escudo US blanco", "diseño por estado"]
+    },
+    {
+      country: "Canadá",
+      continent: "Norteamérica",
+      description: "La Trans-Canada Highway usa un escudo verde con una hoja de maple blanca. Cada provincia tiene además su propio escudo de ruta, como la corona en Ontario o la flor de lis en Quebec.",
+      tags: ["hoja de maple verde", "escudo por provincia"]
+    },
+    {
+      country: "México",
+      continent: "Norteamérica",
+      description: "Las carreteras federales usan un pequeño escudo blanco con el número en negro; las autopistas de cuota suelen marcarse con carteles verdes en vez de este escudo.",
+      tags: ["escudo blanco federal", "autopista de cuota verde"]
+    },
+    {
+      country: "Brasil",
+      continent: "Sudamérica",
+      description: "Las rutas federales (BR) se marcan con un escudo azul y amarillo con el número en el centro, muy reconocible en las principales carreteras del país.",
+      tags: ["escudo azul y amarillo", "rutas BR"]
+    },
+    {
+      country: "Argentina",
+      continent: "Sudamérica",
+      description: "Las rutas nacionales usan un escudo azul y blanco con el número en el centro; las rutas provinciales cambian de color según la provincia.",
+      tags: ["escudo azul y blanco", "color por provincia"]
+    },
+    {
+      country: "Chile",
+      continent: "Sudamérica",
+      description: "Las rutas usan un escudo verde con el número en blanco, un estilo similar al de otros países sudamericanos influenciados por el estándar de señalización estadounidense.",
+      tags: ["escudo verde", "número en blanco"]
+    },
+    {
+      country: "Uruguay",
+      continent: "Sudamérica",
+      description: "Las rutas nacionales se identifican con un escudo azul simple con el número en blanco, generalmente colocado sobre carteles de dirección en fondo verde.",
+      tags: ["escudo azul simple", "carteles verdes"]
+    },
+    {
+      country: "Perú",
+      continent: "Sudamérica",
+      description: "La red vial nacional usa un escudo rojo y blanco con el número de ruta, acompañado de letras que indican si pertenece a una vía longitudinal o transversal.",
+      tags: ["escudo rojo y blanco", "longitudinal/transversal"]
+    },
+    {
+      country: "Colombia",
+      continent: "Sudamérica",
+      description: "Las rutas nacionales se marcan con un escudo amarillo con el número en negro, generalmente colocado sobre carteles de dirección de fondo verde.",
+      tags: ["escudo amarillo", "carteles verdes"]
+    },
+    {
+      country: "Reino Unido",
+      continent: "Europa",
+      description: "Las autopistas ('motorways') se marcan con un escudo azul con la letra M; las rutas principales tipo A usan un escudo verde, ambos con la tipografía Transport tan característica del país.",
+      tags: ["escudo azul M", "escudo verde tipo A"],
+image: "imagenesescudos/reinounido.png"
+    },
+    {
+      country: "Francia",
+      continent: "Europa",
+      description: "Las autopistas de peaje usan un escudo rojo con el número en blanco; las rutas nacionales usan un escudo rojo con borde propio, y las departamentales uno de color amarillo.",
+      tags: ["escudo rojo de autopista", "departamental amarillo"],
+image: "imagenesescudos/francia.png"
+    },
+    {
+      country: "Alemania",
+      continent: "Europa",
+      description: "Las autobahn usan un escudo azul con una 'A' y el número; las Bundesstraße (carreteras federales) usan en cambio un escudo amarillo con una 'B'.",
+      tags: ["escudo azul A", "escudo amarillo B"],
+image: "imagenesescudos/alemania.png"
+    },
+    {
+      country: "España",
+      continent: "Europa",
+      description: "Las autovías y autopistas usan un escudo azul con el número; las antiguas carreteras nacionales usaban un escudo rojo con una 'N' antes de la unificación del sistema.",
+      tags: ["escudo azul de autovía", "N roja nacional"],
+image: "imagenesescudos/españa.png"
+    },
+    {
+      country: "Italia",
+      continent: "Europa",
+      description: "Las autostrade se marcan con un escudo verde en forma de placa; las strade statali usan en cambio un escudo azul con las letras 'SS' antes del número.",
+      tags: ["escudo verde autostrada", "SS azul"],
+image: "imagenesescudos/italia.png"
+    },
+    {
+      country: "Países Bajos",
+      continent: "Europa",
+      description: "Las autopistas usan un escudo rojo con una 'A' y el número; las carreteras provinciales usan un escudo amarillo con una 'N' en su lugar.",
+      tags: ["escudo rojo A", "escudo amarillo N"],
+image: "imagenesescudos/paisesbajos.png"
+    },
+    {
+      country: "Suiza",
+      continent: "Europa",
+      description: "Las autopistas se identifican con un escudo verde en forma de placa con el número, en un estilo bastante similar al italiano por la cercanía e influencia compartida.",
+      tags: ["escudo verde", "forma de placa"],
+image: "imagenesescudos/suiza.png"
+    },
+    {
+      country: "Polonia",
+      continent: "Europa",
+      description: "Las autopistas usan un escudo rojo con una 'A' y el número; las rutas nacionales, en cambio, usan un rectángulo rojo simple con el número en blanco.",
+      tags: ["escudo rojo A", "rectángulo rojo nacional"],
+image: "imagenesescudos/polonia.png"
+    },
+    {
+      country: "Noruega",
+      continent: "Europa",
+      description: "Las rutas europeas (E) usan el escudo verde internacional con una 'E'; las rutas nacionales noruegas ('Rv') usan en cambio un escudo rojo con el número en blanco.",
+      tags: ["escudo verde E", "escudo rojo Rv"],
+image: "imagenesescudos/noruega.png"
+    },
+    {
+      country: "Suecia",
+      continent: "Europa",
+      description: "Sigue el mismo estándar nórdico: el escudo verde internacional para las rutas E, y un escudo azul con el número para las rutas nacionales suecas.",
+      tags: ["escudo verde E", "escudo azul nacional"],
+image: "imagenesescudos/suecia.png"
+    },
+    {
+      country: "República Checa",
+      continent: "Europa",
+      description: "Las autopistas ('dálnice') usan un escudo rojo con una 'D' y el número; las carreteras de primera clase usan en cambio un escudo azul con el número.",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/chequia.png"
+    },
+    {
+      country: "Belgica",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/belgica.png"
+    },
+    {
+      country: "Bulgaria",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/bulgaria.png"
+    },
+    {
+      country: "Croacia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/croacia.png"
+    },
+    {
+      country: "Dinamarca",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/dinamarca.png"
+    },
+    {
+      country: "Eslovaquia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/eslovaquia.png"
+    },
+    {
+      country: "Estonia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/estonia.png"
+    },
+    {
+      country: "Finlandia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/finlandia.png"
+    },
+    {
+      country: "Grecia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/grecia.png"
+    },
+    {
+      country: "Hungria",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/hungria.png"
+    },
+    {
+      country: "Irlanda",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/irlanda.png"
+    },
+    {
+      country: "Islandia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/islandia.png"
+    },
+    {
+      country: "Letonia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/letonia.png"
+    },
+    {
+      country: "Lituania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/lituania.png"
+    },
+    {
+      country: "Luxemburgo",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/luxemburgo.png"
+    },
+    {
+      country: "Macedonia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/nortemace.png"
+    },
+    {
+      country: "Portugal",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/portugal.png"
+    },
+    {
+      country: "Rumania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/rumania.png"
+    },
+    {
+      country: "Serbia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/serbia.png"
+    },
+    {
+      country: "Turquia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/turquia.png"
+    },
+    {
+      country: "Ucrania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["escudo rojo D", "escudo azul de primera clase"],
+image: "imagenesescudos/ucrania.png"
+    },
+    {
+      country: "Japón",
+      continent: "Asia",
+      description: "Las autopistas usan un escudo verde con el nombre y número de la ruta; las rutas nacionales se marcan con un escudo triangular azul y blanco muy particular, único en el mundo.",
+      tags: ["escudo verde de autopista", "triángulo azul y blanco"],
+image: "imagenesescudos/japon.png"
+    },
+    {
+      country: "India",
+      continent: "Asia",
+      description: "Las carreteras nacionales usan un rectángulo amarillo con el número en negro y las siglas 'NH'; las estatales usan colores que varían bastante según el estado.",
+      tags: ["rectángulo amarillo NH", "color por estado"],
+image: "imagenesescudos/india.png"
+    },
+    {
+      country: "Tailandia",
+      continent: "Asia",
+      description: "Las rutas se marcan con un escudo blanco en forma de placa con el número en negro, generalmente acompañado de texto en tailandés y su romanización en inglés.",
+      tags: ["escudo blanco", "tailandés e inglés"],
+image: "imagenesescudos/thailandia.png"
+    },
+    {
+      country: "Filipinas",
+      continent: "Asia",
+      description: "Las rutas nacionales usan un escudo verde y blanco con el número, parte de un sistema de numeración de carreteras adoptado de forma más reciente en el país.",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/filipinas.png"
+    },
+    {
+      country: "Bangladesh",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/bangladesh.png"
+    },
+    {
+      country: "Butan",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/butan.png"
+    },
+    {
+      country: "Cambodia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/cambodia.png"
+    },
+    {
+      country: "Corea del Sir",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/corea.png"
+    },
+    {
+      country: "Filipinas",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/filipinas.png"
+    },
+    {
+      country: "Laos",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/laos.png"
+    },
+    {
+      country: "Malaysia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/malaysia.png"
+    },
+    {
+      country: "Mongolia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/mongolia.png"
+    },
+    {
+      country: "Singapore",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/singapore.png"
+    },
+    {
+      country: "Sri Lanka",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/srilanka.png"
+    },
+    {
+      country: "Taiwan",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/taiwan.png"
+    },
+    {
+      country: "Emiratos Arabes Unidos",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/uae.png"
+    },
+    {
+      country: "Vietnam",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["escudo verde y blanco", "numeración reciente"],
+image: "imagenesescudos/vietnam.png"
+    },
+    {
+      country: "Sudáfrica",
+      continent: "África",
+      description: "Las autopistas nacionales (N) usan un escudo verde con la letra 'N' y el número; las rutas regionales (R) usan en cambio un escudo amarillo.",
+      tags: ["escudo verde N", "escudo amarillo R"]
+    },
+    {
+      country: "Kenia",
+      continent: "África",
+      description: "Las carreteras clasificadas como 'A' (troncales internacionales) usan un escudo con el número precedido de la letra, sobre carteles de fondo blanco o verde según la vía.",
+      tags: ["escudo con letra A", "carteles blanco o verde"]
+    },
+    {
+      country: "Nigeria",
+      continent: "África",
+      description: "Las carreteras troncales federales usan un escudo verde con el número precedido de una letra, según la clasificación de la vía dentro de la red nacional.",
+      tags: ["escudo verde federal", "clasificación por letra"]
+    },
+    {
+      country: "Ghana",
+      continent: "África",
+      description: "Las principales rutas nacionales usan un escudo con el número de la ruta, generalmente acompañado de carteles de dirección sobre fondo verde.",
+      tags: ["escudo de ruta", "carteles verdes"]
+    },
+    {
+      country: "Botsuana",
+      continent: "África",
+      description: "Las carreteras principales ('A-roads') usan un escudo simple con el número precedido de una letra, sobre un país con una red vial más escasa y espaciada que sus vecinos.",
+      tags: ["escudo con letra A", "red vial escasa"]
+    },
+    {
+      country: "Australia",
+      continent: "Oceanía",
+      description: "Las autopistas nacionales usan un escudo verde y amarillo con forma distintiva; las rutas estatales, en cambio, varían de diseño según el estado.",
+      tags: ["escudo verde y amarillo", "diseño por estado"]
+    },
+    {
+      country: "Nueva Zelanda",
+      continent: "Oceanía",
+      description: "Las 'state highways' usan un escudo rojo de forma ovalada con el número en blanco, un diseño muy reconocible y uniforme en todo el país.",
+      tags: ["escudo rojo ovalado", "diseño uniforme"]
+    }
+  ];
+
+  const continents = ["Todos", "Norteamérica", "Sudamérica", "Europa", "Asia", "África", "Oceanía"];
+
+  let currentQuizContinent = "Todos";
+  let currentCorrect = null;
+  let score = 0;
+  let total = 0;
+  let answered = false;
+
+  function normalize(str) {
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function showSection(section) {
+    document.getElementById("quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("study").classList.toggle("active", section === "study");
+    document.getElementById("btn-quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("btn-study").classList.toggle("active", section === "study");
+  }
+
+  function buildContinentButtons() {
+    const container = document.getElementById("continent-buttons");
+    container.innerHTML = "";
+    continents.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "continent-btn" + (c === currentQuizContinent ? " active" : "");
+      btn.textContent = c;
+      btn.onclick = () => selectQuizContinent(c);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectQuizContinent(continent) {
+    currentQuizContinent = continent;
+    document.querySelectorAll(".continent-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent === continent);
+    });
+    document.getElementById("quiz-continent-label").textContent =
+      continent === "Todos" ? "Mostrando: Todos los continentes" : "Mostrando: " + continent;
+    score = 0;
+    total = 0;
+    updateStats();
+    nextQuestion();
+  }
+
+  function getQuizPool() {
+    if (currentQuizContinent === "Todos") return routeShields;
+    const filtered = routeShields.filter(r => r.continent === currentQuizContinent);
+    return filtered.length >= 2 ? filtered : routeShields;
+  }
+
+  function nextQuestion() {
+    answered = false;
+    const pool = getQuizPool();
+    currentCorrect = pool[Math.floor(Math.random() * pool.length)];
+const imgBox = document.getElementById("quiz-image-container"); if (currentCorrect.image) { imgBox.innerHTML = '<img src="' + currentCorrect.image + '" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">'; } else { imgBox.innerHTML = '<div class="image-placeholder">Aquí va la imagen</div>'; }
+
+    let wrongPool = pool.filter(r => r.country !== currentCorrect.country);
+    if (wrongPool.length === 0) {
+      wrongPool = routeShields.filter(r => r.country !== currentCorrect.country);
+    }
+    const wrong = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+
+    const options = Math.random() < 0.5
+      ? [currentCorrect, wrong]
+      : [wrong, currentCorrect];
+
+    const container = document.getElementById("answer-buttons");
+    container.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = opt.country;
+      btn.onclick = () => checkAnswer(opt, btn);
+      container.appendChild(btn);
+    });
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("explanation").textContent = "";
+    document.getElementById("next-btn").disabled = true;
+  }
+
+  function checkAnswer(selected, btnEl) {
+    if (answered) return;
+    answered = true;
+    total++;
+
+    const buttons = document.querySelectorAll(".answer-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === currentCorrect.country) {
+        btn.classList.add("correct");
+      }
+    });
+
+    const resultEl = document.getElementById("result");
+    if (selected.country === currentCorrect.country) {
+      score++;
+      resultEl.textContent = "¡Correcto!";
+      resultEl.style.color = "var(--ok)";
+    } else {
+      btnEl.classList.add("incorrect");
+      resultEl.textContent = "Incorrecto. Era: " + currentCorrect.country;
+      resultEl.style.color = "var(--bad)";
+    }
+
+    document.getElementById("explanation").textContent = currentCorrect.description;
+    document.getElementById("next-btn").disabled = false;
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById("stats").textContent = "Aciertos: " + score + " / " + total;
+  }
+
+  function buildContinentSelect() {
+    const select = document.getElementById("continent-select");
+    continents.filter(c => c !== "Todos").forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderStudyGrid() {
+    const search = normalize(document.getElementById("search-input").value.trim());
+    const continent = document.getElementById("continent-select").value;
+
+    const filtered = routeShields.filter(r => {
+      const matchesContinent = continent === "Todos" || r.continent === continent;
+      const haystack = normalize(r.country + " " + r.description + " " + r.tags.join(" "));
+      const matchesSearch = search === "" || haystack.includes(search);
+      return matchesContinent && matchesSearch;
+    });
+
+    const grid = document.getElementById("study-grid");
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No se encontraron resultados.</div>';
+      return;
+    }
+
+    filtered.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "study-card";
+      card.innerHTML = `
+        <div class="study-image"> ${r.image ? `<img src="${r.image}" style="width:100%;height:100%;object-fit:contain;">` : '<div class="no-image">Aquí va la imagen</div>'} </div>
+        <div class="study-content">
+          <h3>${r.country}</h3>
+          <div class="continent">${r.continent}</div>
+          <p>${r.description}</p>
+          <div class="tags">
+            ${r.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Init
+  buildContinentButtons();
+  buildContinentSelect();
+  nextQuestion();
+  renderStudyGrid();
+
+</script>
+
+</body>
+</html>

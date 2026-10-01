@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geo Trainer · Menú principal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #1A5FAD;
+    --paint-dim: #273B50;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color:var(--chalk);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    padding:36px 16px 60px;
+  }
+
+  .wrap{max-width:1500px;margin:0 auto;}
+
+  header{margin-bottom:32px; text-align:center;}
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    color:var(--paint);
+    font-size:13px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:30px;
+    line-height:1.15;
+    margin:0 0 10px;
+  }
+  .sub{color:var(--muted); font-size:14.5px; line-height:1.5; margin:0;}
+
+  .pin-wrap{
+    display:flex;
+    justify-content:center;
+    margin-bottom:6px;
+  }
+  .pin{
+    animation: pinDrop .7s cubic-bezier(.28,1.8,.5,1) both;
+    transform-origin: 50% 100%;
+  }
+  .pin-sway{
+    transform-origin: 50% 100%;
+    animation: pinSway 2.4s ease-in-out .7s infinite;
+  }
+  .pin-sway svg{ display:block; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+  .pin-shadow{
+    width:16px; height:5px; margin:2px auto 0;
+    background:rgba(0,0,0,.45);
+    border-radius:50%;
+    animation: pinShadow .7s ease both, shadowSway 2.4s ease-in-out .7s infinite;
+  }
+  @keyframes pinDrop{
+    0%{ transform:translateY(-140px) scale(.8); opacity:0; }
+    60%{ transform:translateY(4px) scale(1.05); opacity:1; }
+    80%{ transform:translateY(-6px) scale(1); }
+    100%{ transform:translateY(0) scale(1); }
+  }
+  @keyframes pinSway{
+    0%, 100%{ transform:rotate(0deg); }
+    25%{ transform:rotate(-7deg); }
+    75%{ transform:rotate(7deg); }
+  }
+  @keyframes shadowSway{
+    0%, 100%{ transform:scaleX(1); }
+    25%{ transform:scaleX(.82) translateX(-2px); }
+    75%{ transform:scaleX(.82) translateX(2px); }
+  }
+  @keyframes pinShadow{
+    0%{ transform:scale(.3); opacity:0; }
+    60%{ transform:scale(1.1); opacity:.5; }
+    100%{ transform:scale(1); opacity:.45; }
+  }
+
+  .flag-strip{
+    position:relative;
+    overflow:hidden;
+    margin:22px 0 34px;
+    padding:12px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .flag-track{
+    display:flex;
+    width:max-content;
+    gap:34px;
+    animation: flagScroll 26s linear infinite;
+  }
+  .flag-track span{
+    font-size:26px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--muted);
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:.03em;
+    white-space:nowrap;
+  }
+  .flag-track span .flag-icon{
+    width:30px; height:20px;
+    border-radius:3px;
+    box-shadow:0 0 0 1px rgba(255,255,255,.18);
+    flex:0 0 auto;
+    display:block;
+  }
+  @keyframes flagScroll{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .flag-track{ animation:none; }
+    .pin{ animation:none; }
+    .pin-sway{ animation:none; }
+    .pin-shadow{ animation:none; opacity:.45; transform:scale(1); }
+  }
+
+  .route-strip{
+    width:100%;
+    height:46px;
+    margin:26px 0 0;
+    overflow:visible;
+  }
+  .route-strip svg{ display:block; width:100%; height:100%; overflow:visible; }
+  .route-line{
+    stroke:var(--line);
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-dasharray:2 14;
+    fill:none;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .route-strip{ display:none; }
+  }
+
+  .menu{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:12px;
+    align-items:start;
+  }
+
+  .col{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+  }
+
+  .col-header{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    text-align:center;
+    color:var(--paint);
+    margin:0;
+  }
+
+  .item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 14px;
+    text-decoration:none;
+    color:var(--chalk);
+    transition:border-color .15s ease, transform .1s ease, background .15s ease;
+  }
+  .item:hover{border-color:var(--paint-dim); background:#292c34;}
+  .item:active{transform:scale(0.98);}
+
+  .icon{
+    flex:0 0 auto;
+    width:40px; height:40px;
+    border-radius:9px;
+    background:#1a1c22;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon svg{width:22px; height:22px;}
+
+  .icon-flag{
+    flex:0 0 auto;
+    width:44px; height:30px;
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,.22);
+    background:#1a1c22;
+  }
+  .icon-flag svg{width:100%; height:100%; display:block;}
+
+  .text{flex:1; min-width:0;}
+  .title{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 2px;
+  }
+  .desc{
+    font-size:12px;
+    color:var(--muted);
+    margin:0;
+    line-height:1.35;
+  }
+
+  .arrow{
+    flex:0 0 auto;
+    color:var(--muted);
+    font-size:18px;
+  }
+
+  footer{
+    margin-top:36px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.6;
+  }
+
+  @media (max-width: 980px){
+    .menu{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 560px){
+    .menu{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+<symbol id="flag-br" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#009B3A"/>
+
+  <!-- Rombo amarillo -->
+  <path d="M12 1.5L22.5 8L12 14.5L1.5 8Z" fill="#FFDF00"/>
+
+  <!-- Círculo azul -->
+  <circle cx="12" cy="8" r="3.7" fill="#002776"/>
+
+  <!-- Banda blanca -->
+  <path d="M8.6 6.7
+           Q12 6.3 15.4 8.2
+           Q15.5 8.7 15.3 9.1
+           Q12 7.2 8.7 7.7Z"
+        fill="#fff"/>
+
+  <!-- Estrellas simplificadas -->
+  <g fill="#fff">
+    <circle cx="10.3" cy="7.2" r=".18"/>
+    <circle cx="11.4" cy="8.9" r=".18"/>
+    <circle cx="12.6" cy="7.4" r=".18"/>
+    <circle cx="13.7" cy="8.4" r=".18"/>
+    <circle cx="12.1" cy="9.5" r=".18"/>
+    <circle cx="14.2" cy="7.2" r=".18"/>
+  </g>
+</symbol>
+    <symbol id="flag-mx" viewBox="0 0 24 16">
+  <!-- Verde -->
+  <rect width="8" height="16" fill="#006847"/>
+
+  <!-- Blanco -->
+  <rect x="8" width="8" height="16" fill="#fff"/>
+
+  <!-- Rojo -->
+  <rect x="16" width="8" height="16" fill="#CE1126"/>
+
+  <!-- Escudo simplificado -->
+  <circle cx="12" cy="8" r="1.8" fill="#8B4513"/>
+  <path d="M10.7 8.7
+           Q12 7.5 13.3 8.7
+           Q12.9 10 12 10
+           Q11.1 10 10.7 8.7Z"
+        fill="#006847"/>
+  <path d="M12 7
+           Q12.8 6.1 13.3 7
+           Q13.1 8 12 8.7
+           Q10.9 8 10.7 7
+           Q11.2 6.1 12 7Z"
+        fill="#8B4513"/>
+</symbol>
+    <symbol id="flag-es" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#AA151B"/>
+      <rect y="4" width="24" height="8" fill="#F1BF00"/>
+    </symbol>
+    <symbol id="flag-za" viewBox="0 0 32 20">
+  <!-- Fondo rojo superior -->
+  <rect width="32" height="20" fill="#DE3831"/>
+
+  <!-- Fondo azul inferior -->
+  <rect y="10" width="32" height="10" fill="#002395"/>
+
+  <!-- Franja blanca diagonal superior -->
+  <path d="M0 0 L14 10 L0 20 L0 16 L8 10 L0 4Z" fill="#fff"/>
+
+  <!-- Franja amarilla diagonal -->
+  <path d="M0 2 L11 10 L0 18 L0 15 L7 10 L0 5Z" fill="#FFB81C"/>
+
+  <!-- Negro central -->
+  <path d="M0 5 L7 10 L0 15Z" fill="#000"/>
+
+  <!-- Y blanco -->
+  <path d="M8 0 L12 0 L17 7 L32 7 L32 13 L17 13 L12 20 L8 20 L13 10Z"
+        fill="#fff"/>
+
+  <!-- Y verde -->
+  <path d="M0 7 L5 10 L0 13 L0 11.5 L2.5 10 L0 8.5Z
+           M10 0 L14 0 L19 7 L32 7 L32 13 L19 13 L14 20 L10 20 L15 10Z"
+        fill="#007A4D"/>
+</symbol>
+<symbol id="flag-co" viewBox="0 0 32 20">
+  <rect width="32" height="20" fill="#FCD116"/>
+  <rect y="10" width="32" height="5" fill="#003893"/>
+  <rect y="15" width="32" height="5" fill="#CE1126"/>
+</symbol>
+
+<symbol id="flag-nz" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#00247D"/>
+  <path d="M0 0L10 6M10 0L0 6" stroke="#fff" stroke-width="2"/>
+  <path d="M0 0L10 6M10 0L0 6" stroke="#CC142B" stroke-width="1"/>
+  <path d="M5 0V6M0 3H10" stroke="#fff" stroke-width="3"/>
+  <path d="M5 0V6M0 3H10" stroke="#CC142B" stroke-width="1.8"/>
+  <g fill="#CC142B" stroke="#fff" stroke-width=".35">
+    <path d="M18.2 2.8l.35 1.15 1.2-.15-.85.85.7.95-1.1-.45-.6 1.05-.05-1.2-1.15-.35 1.1-.4z"/>
+    <path d="M20.8 6.2l.35 1.15 1.2-.15-.85.85.7.95-1.1-.45-.6 1.05-.05-1.2-1.15-.35 1.1-.4z"/>
+    <path d="M18.5 10.2l.35 1.15 1.2-.15-.85.85.7.95-1.1-.45-.6 1.05-.05-1.2-1.15-.35 1.1-.4z"/>
+    <path d="M15.8 7.8l.35 1.15 1.2-.15-.85.85.7.95-1.1-.45-.6 1.05-.05-1.2-1.15-.35 1.1-.4z"/>
+  </g>
+</symbol>
+
+<symbol id="flag-au" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#00008B"/>
+
+  <!-- Union Jack -->
+  <path d="M0 0L10 6M10 0L0 6" stroke="#fff" stroke-width="2"/>
+  <path d="M0 0L10 6M10 0L0 6" stroke="#C8102E" stroke-width="1"/>
+  <path d="M5 0V6M0 3H10" stroke="#fff" stroke-width="3"/>
+  <path d="M5 0V6M0 3H10" stroke="#C8102E" stroke-width="1.8"/>
+
+  <!-- Commonwealth Star -->
+  <path d="M5 9l.7 1.9 2-.1-1.55 1.3.55 1.9-1.7-1.05-1.7 1.05.55-1.9-1.55-1.3 2 .1z"
+        fill="#fff"/>
+
+  <!-- Southern Cross -->
+  <g fill="#fff">
+    <path d="M17 3.2l.45 1.2 1.25.05-.95.8.3 1.2-1.05-.65-1.05.65.3-1.2-.95-.8 1.25-.05z"/>
+    <path d="M20.3 6.5l.45 1.2 1.25.05-.95.8.3 1.2-1.05-.65-1.05.65.3-1.2-.95-.8 1.25-.05z"/>
+    <path d="M18 10.2l.45 1.2 1.25.05-.95.8.3 1.2-1.05-.65-1.05.65.3-1.2-.95-.8 1.25-.05z"/>
+    <path d="M14.8 7.4l.45 1.2 1.25.05-.95.8.3 1.2-1.05-.65-1.05.65.3-1.2-.95-.8 1.25-.05z"/>
+    <path d="M16.3 12.2l.55 1.5 1.55.05-1.2 1 .4 1.45-1.3-.8-1.3.8.4-1.45-1.2-1 1.55-.05z"/>
+  </g>
+</symbol>
+
+    <symbol id="flag-us" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#fff"/>
+      <g fill="#B22234">
+        <rect y="0" width="24" height="1.23"/>
+        <rect y="2.46" width="24" height="1.23"/>
+        <rect y="4.92" width="24" height="1.23"/>
+        <rect y="7.38" width="24" height="1.23"/>
+        <rect y="9.85" width="24" height="1.23"/>
+        <rect y="12.3" width="24" height="1.23"/>
+        <rect y="14.77" width="24" height="1.23"/>
+      </g>
+      <rect width="10.5" height="8.6" fill="#3C3B6E"/>
+      <g fill="#fff">
+        <circle cx="2" cy="1.8" r="0.55"/><circle cx="4.5" cy="1.8" r="0.55"/><circle cx="7" cy="1.8" r="0.55"/><circle cx="9.5" cy="1.8" r="0.55"/>
+        <circle cx="3.25" cy="3.4" r="0.55"/><circle cx="5.75" cy="3.4" r="0.55"/><circle cx="8.25" cy="3.4" r="0.55"/>
+        <circle cx="2" cy="5" r="0.55"/><circle cx="4.5" cy="5" r="0.55"/><circle cx="7" cy="5" r="0.55"/><circle cx="9.5" cy="5" r="0.55"/>
+        <circle cx="3.25" cy="6.6" r="0.55"/><circle cx="5.75" cy="6.6" r="0.55"/><circle cx="8.25" cy="6.6" r="0.55"/>
+      </g>
+    </symbol>
+    <symbol id="flag-fr" viewBox="0 0 24 16">
+      <rect width="8" height="16" fill="#002395"/>
+      <rect x="8" width="8" height="16" fill="#fff"/>
+      <rect x="16" width="8" height="16" fill="#ED2939"/>
+    </symbol>
+    <symbol id="flag-ar" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#75AADB"/>
+      <rect y="5.33" width="24" height="5.33" fill="#fff"/>
+      <circle cx="12" cy="8" r="1.7" fill="#F6B40E" stroke="#85340A" stroke-width="0.25"/>
+    </symbol>
+    <symbol id="flag-gb" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#00247D"/>
+      <path d="M0,0 L24,16 M24,0 L0,16" stroke="#fff" stroke-width="3.2"/>
+      <path d="M0,0 L24,16 M24,0 L0,16" stroke="#CF142B" stroke-width="1.1"/>
+      <path d="M12,0 V16 M0,8 H24" stroke="#fff" stroke-width="5.4"/>
+      <path d="M12,0 V16 M0,8 H24" stroke="#CF142B" stroke-width="2"/>
+    </symbol>
+    <symbol id="flag-jp" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#fff"/>
+      <circle cx="12" cy="8" r="4.6" fill="#BC002D"/>
+    </symbol>
+    <symbol id="flag-au" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#00247D"/>
+      <rect width="12" height="8" fill="#00247D"/>
+      <path d="M0,0 L12,8 M12,0 L0,8" stroke="#fff" stroke-width="1.4"/>
+      <path d="M6,0 V8 M0,4 H12" stroke="#fff" stroke-width="2.2"/>
+      <path d="M6,0 V8 M0,4 H12" stroke="#CF142B" stroke-width="0.8"/>
+      <g fill="#fff">
+        <circle cx="18" cy="3.5" r="0.85"/>
+        <circle cx="20.5" cy="6.5" r="0.65"/>
+        <circle cx="20" cy="10.5" r="0.85"/>
+        <circle cx="16.5" cy="12.5" r="0.65"/>
+        <circle cx="15" cy="9" r="0.5"/>
+        <circle cx="6" cy="12.5" r="1"/>
+      </g>
+    </symbol>
+    <symbol id="flag-co" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#FCD116"/>
+      <rect y="8" width="24" height="4" fill="#003893"/>
+      <rect y="12" width="24" height="4" fill="#CE1126"/>
+    </symbol>
+    <symbol id="flag-in" viewBox="0 0 24 16">
+      <rect width="24" height="5.33" fill="#FF9933"/>
+      <rect y="5.33" width="24" height="5.33" fill="#fff"/>
+      <rect y="10.66" width="24" height="5.34" fill="#138808"/>
+      <circle cx="12" cy="8" r="1.7" fill="none" stroke="#000080" stroke-width="0.35"/>
+      <circle cx="12" cy="8" r="0.35" fill="#000080"/>
+    </symbol>
+    <symbol id="flag-de" viewBox="0 0 24 16">
+      <rect width="24" height="5.34" fill="#000"/>
+      <rect y="5.33" width="24" height="5.34" fill="#DD0000"/>
+      <rect y="10.66" width="24" height="5.34" fill="#FFCE00"/>
+    </symbol>
+    <symbol id="flag-pl" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#fff"/>
+      <rect y="8" width="24" height="8" fill="#DC143C"/>
+    </symbol>
+    <symbol id="flag-th" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#fff"/>
+      <rect width="24" height="2.67" fill="#A51931"/>
+      <rect y="13.33" width="24" height="2.67" fill="#A51931"/>
+      <rect y="5.33" width="24" height="5.34" fill="#2D2A4A"/>
+    </symbol>
+<symbol id="flag-kr" viewBox="0 0 32 20">
+  <!-- Fondo blanco -->
+  <rect width="32" height="20" fill="#fff"/>
+
+  <!-- Taegeuk -->
+  <path d="M16 4
+           A6 6 0 1 0 16 16
+           A3 3 0 1 1 16 10
+           A3 3 0 1 0 16 4Z"
+        fill="#cd2e3a"/>
+
+  <path d="M16 4
+           A6 6 0 0 1 16 16
+           A3 3 0 1 0 16 10
+           A3 3 0 1 1 16 4Z"
+        fill="#0047a0"/>
+
+  <!-- Gwae superior izquierdo -->
+  <g fill="#000" transform="rotate(-33 7 5)">
+    <rect x="4" y="2" width="6" height="1"/>
+    <rect x="4" y="4" width="6" height="1"/>
+    <rect x="4" y="6" width="6" height="1"/>
+  </g>
+
+  <!-- Gwae superior derecho -->
+  <g fill="#000" transform="rotate(33 25 5)">
+    <rect x="22" y="2" width="6" height="1"/>
+    <rect x="22" y="4" width="2.5" height="1"/>
+    <rect x="25.5" y="4" width="2.5" height="1"/>
+    <rect x="22" y="6" width="6" height="1"/>
+  </g>
+
+  <!-- Gwae inferior izquierdo -->
+  <g fill="#000" transform="rotate(33 7 15)">
+    <rect x="4" y="13" width="2.5" height="1"/>
+    <rect x="7.5" y="13" width="2.5" height="1"/>
+    <rect x="4" y="15" width="6" height="1"/>
+    <rect x="4" y="17" width="2.5" height="1"/>
+    <rect x="7.5" y="17" width="2.5" height="1"/>
+  </g>
+
+  <!-- Gwae inferior derecho -->
+  <g fill="#000" transform="rotate(-33 25 15)">
+    <rect x="22" y="13" width="6" height="1"/>
+    <rect x="22" y="15" width="2.5" height="1"/>
+    <rect x="25.5" y="15" width="2.5" height="1"/>
+    <rect x="22" y="17" width="6" height="1"/>
+  </g>
+</symbol>
+    <symbol id="flag-id" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#E70011"/>
+      <rect y="8" width="24" height="8" fill="#fff"/>
+    </symbol>
+    <symbol id="flag-ph" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#0038A8"/>
+      <rect y="8" width="24" height="8" fill="#CE1126"/>
+      <polygon points="0,0 11,8 0,16" fill="#fff"/>
+      <circle cx="3.4" cy="8" r="1.6" fill="#FCD116"/>
+    </symbol>
+    <symbol id="flag-ke" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#fff"/>
+      <rect width="24" height="4.5" fill="#000"/>
+      <rect y="5.5" width="24" height="5" fill="#BB0000"/>
+      <rect y="11.5" width="24" height="4.5" fill="#006600"/>
+      <ellipse cx="12" cy="8" rx="2.2" ry="3.4" fill="#BB0000" stroke="#fff" stroke-width="0.5"/>
+      <path d="M8.2 3.2 15.8 12.8M15.8 3.2 8.2 12.8" stroke="#fff" stroke-width="0.6"/>
+    </symbol>
+
+<symbol id="flag-gb" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#012169"/>
+  <path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3"/>
+  <path d="M0 0L24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.2"/>
+  <path d="M12 0V16M0 8H24" stroke="#fff" stroke-width="5"/>
+  <path d="M12 0V16M0 8H24" stroke="#C8102E" stroke-width="3"/>
+</symbol>
+
+<symbol id="flag-tr" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#E30A17"/>
+
+  <!-- Luna -->
+  <circle cx="10" cy="8" r="4.2" fill="#fff"/>
+  <circle cx="11.4" cy="7.2" r="3.35" fill="#E30A17"/>
+
+  <!-- Estrella -->
+  <path
+    d="M15.2 8
+       l1.05 1.45
+       1.72-.55
+       -1.05 1.45
+       1.05 1.45
+       -1.72-.55
+       -1.05 1.45
+       v-1.8
+       l-1.72-.55
+       1.72-.55z"
+    fill="#fff"/>
+</symbol>
+
+<symbol id="flag-se" viewBox="0 0 24 16">
+  <rect width="24" height="16" fill="#006AA7"/>
+  <rect x="7" width="2.5" height="16" fill="#FECC00"/>
+  <rect y="6.75" width="24" height="2.5" fill="#FECC00"/>
+</symbol>
+
+    <symbol id="flag-om" viewBox="0 0 24 16">
+      <rect width="24" height="16" fill="#fff"/>
+      <rect x="6" width="18" height="5.33" fill="#CE1126"/>
+      <rect x="6" y="10.67" width="18" height="5.33" fill="#008000"/>
+      <rect width="6" height="16" fill="#CE1126"/>
+      <rect x="0.8" y="1.8" width="1.7" height="12.4" fill="#fff"/>
+      <rect x="2.5" y="3.1" width="1.7" height="9.8" fill="#fff"/>
+    </symbol>
+    <symbol id="flag-pe" viewBox="0 0 24 16">
+      <rect width="8" height="16" fill="#D91023"/>
+      <rect x="8" width="8" height="16" fill="#fff"/>
+      <rect x="16" width="8" height="16" fill="#D91023"/>
+    </symbol>
+    <symbol id="flag-cl" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#fff"/>
+      <rect y="8" width="24" height="8" fill="#D52B1E"/>
+      <rect width="8" height="8" fill="#0039A6"/>
+      <path d="M4 1.4 4.7 3.4 6.8 3.4 5.1 4.6 5.8 6.6 4 5.4 2.2 6.6 2.9 4.6 1.2 3.4 3.3 3.4Z" fill="#fff"/>
+    </symbol>
+    <symbol id="flag-ec" viewBox="0 0 24 16">
+      <rect width="24" height="8" fill="#FFD100"/>
+      <rect y="8" width="24" height="4" fill="#034EA2"/>
+      <rect y="12" width="24" height="4" fill="#CE1126"/>
+      <circle cx="12" cy="8" r="2" fill="#8B5A2B" opacity=".9"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header>
+    <div class="pin-wrap">
+      <div class="pin">
+        <div class="pin-sway">
+          <svg width="34" height="44" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" fill="#1A5FAD"/>
+            <circle cx="12" cy="12" r="5" fill="#f2efe6"/>
+          </svg>
+        </div>
+        <div class="pin-shadow"></div>
+      </div>
+    </div>
+    <p class="eyebrow">Geo Trainer</p>
+    <h1>Entrenador de meta para GeoGuessr</h1>
+    <p class="sub">Elegí qué querés practicar.</p>
+  </header>
+
+  <div class="flag-strip">
+    <div class="flag-track">
+      <span><svg class="flag-icon"><use href="#flag-br"/></svg>Brasil</span>
+      <span><svg class="flag-icon"><use href="#flag-mx"/></svg>México</span>
+      <span><svg class="flag-icon"><use href="#flag-es"/></svg>España</span>
+      <span><svg class="flag-icon"><use href="#flag-za"/></svg>Sudáfrica</span>
+      <span><svg class="flag-icon"><use href="#flag-us"/></svg>Estados Unidos</span>
+      <span><svg class="flag-icon"><use href="#flag-fr"/></svg>Francia</span>
+      <span><svg class="flag-icon"><use href="#flag-ar"/></svg>Argentina</span>
+      <span><svg class="flag-icon"><use href="#flag-gb"/></svg>Reino Unido</span>
+      <span><svg class="flag-icon"><use href="#flag-jp"/></svg>Japón</span>
+      <span><svg class="flag-icon"><use href="#flag-au"/></svg>Australia</span>
+      <span><svg class="flag-icon"><use href="#flag-co"/></svg>Colombia</span>
+      <span><svg class="flag-icon"><use href="#flag-in"/></svg>India</span>
+      <!-- se repite para el loop continuo -->
+      <span><svg class="flag-icon"><use href="#flag-br"/></svg>Brasil</span>
+      <span><svg class="flag-icon"><use href="#flag-mx"/></svg>México</span>
+      <span><svg class="flag-icon"><use href="#flag-es"/></svg>España</span>
+      <span><svg class="flag-icon"><use href="#flag-za"/></svg>Sudáfrica</span>
+      <span><svg class="flag-icon"><use href="#flag-us"/></svg>Estados Unidos</span>
+      <span><svg class="flag-icon"><use href="#flag-fr"/></svg>Francia</span>
+      <span><svg class="flag-icon"><use href="#flag-ar"/></svg>Argentina</span>
+      <span><svg class="flag-icon"><use href="#flag-gb"/></svg>Reino Unido</span>
+      <span><svg class="flag-icon"><use href="#flag-jp"/></svg>Japón</span>
+      <span><svg class="flag-icon"><use href="#flag-au"/></svg>Australia</span>
+      <span><svg class="flag-icon"><use href="#flag-co"/></svg>Colombia</span>
+      <span><svg class="flag-icon"><use href="#flag-in"/></svg>India</span>
+    </div>
+  </div>
+
+  <nav class="menu">
+   <div class="col">
+    <p class="col-header">Señales</p>
+    <a class="item" href="dominios.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="#1A5FAD" stroke-width="1.6"/>
+          <path d="M3 12h18M12 3c2.5 2.6 4 5.7 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.7-4-9s1.5-6.4 4-9z" stroke="#1A5FAD" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Dominios</p>
+        <p class="desc">Terminaciones de dominio por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="senales-peatonales.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#1A5FAD" stroke-width="1.6"/>
+          <path d="M12 6.5 17 16H7l5-9.5z" stroke="#1A5FAD" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 16h7M9.5 13.5h5" stroke="#1A5FAD" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Pasos peatonales</p>
+        <p class="desc">Señales de cruce peatonal por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="bolardos.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="3" width="4" height="18" rx="1.5" stroke="#1A5FAD" stroke-width="1.6"/>
+          <rect x="10" y="10" width="4" height="3" fill="#1A5FAD"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Bolardos</p>
+        <p class="desc">Postes reflectantes de borde de carretera</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="postes-luz.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2v20M6 7h12M8 7l-3 3M16 7l3 3M6 13h12" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Postes de luz</p>
+        <p class="desc">Postes eléctricos y crucetas por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="escudos-carretera.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="#1A5FAD" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9.5 12l1.8 1.8L14.5 10" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Escudos de carretera</p>
+        <p class="desc">Numeración de rutas por país</p>
+<p class="title">En construccion</p>
+
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="placas3.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2.5" y="6.5" width="19" height="11" rx="2" stroke="#1A5FAD" stroke-width="1.6"/>
+          <circle cx="5.7" cy="9.3" r="0.9" fill="#1A5FAD"/>
+          <circle cx="18.3" cy="9.3" r="0.9" fill="#1A5FAD"/>
+          <path d="M6.5 14h11" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Placas</p>
+        <p class="desc">Placas por Pais</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="lineas-carretera.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 3 3 21M19 3l2 18" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M12 3v3M12 9v3M12 15v3" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Líneas de carretera</p>
+        <p class="desc">Patrones de líneas viales por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="chevrons-curva2.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 9l6-5 6 5M6 16l6-5 6 5" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Chevrons de curva</p>
+        <p class="desc">Señales de curva pronunciada por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="coches-streetview.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="12" width="16" height="6" rx="2" stroke="#1A5FAD" stroke-width="1.6"/>
+          <path d="M6 12l2-5h8l2 5" stroke="#1A5FAD" stroke-width="1.6" stroke-linejoin="round"/>
+          <circle cx="8.5" cy="18" r="1.4" fill="#1A5FAD"/>
+          <circle cx="15.5" cy="18" r="1.4" fill="#1A5FAD"/>
+          <rect x="10" y="4" width="4" height="3" rx="1" stroke="#1A5FAD" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Coches Street View</p>
+        <p class="desc">Cobertura y cámaras de Street View por país</p>
+<p class="title">En Construccion</p>
+
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="senales-transito.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#1A5FAD" stroke-width="1.6"/>
+          <rect x="8.5" y="8.5" width="7" height="7" stroke="#1A5FAD" stroke-width="1.6" transform="rotate(45 12 12)"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Señales de tránsito</p>
+        <p class="desc">Estilos de señalización vial por país parte trasera</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="senal-alto.html">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 3h8l5 5v8l-5 5H8l-5-5V8l5-5z" stroke="#1A5FAD" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 9.5h7M8.5 12.5h5" stroke="#1A5FAD" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="text">
+        <p class="title">Señal de alto</p>
+        <p class="desc">Variantes del alto/stop por país</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+   </div>
+
+   <div class="col">
+    <p class="col-header">Estados/Distritos America</p>
+
+    <a class="item" href="Mexicodis.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-mx"/></svg></div>
+      <div class="text">
+        <p class="title">Estados de México</p>
+        <p class="desc">Ubicá los estados en el mapa de México</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="MexMuni.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-mx"/></svg></div>
+      <div class="text">
+        <p class="title">Municipios de México</p>
+        <p class="desc">Ubicá los 2.457 municipios, eligiendo un estado a la vez</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+      <a class="item" href="peru-provincias-quiz.html">
+        <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-pe"/></svg></div>
+        <div class="text">
+          <p class="title">Perú</p>
+          <p class="desc">Provincias de Perú</p>
+        </div>
+        <div class="arrow">→</div>
+      </a>
+
+      <a class="item" href="EcuadorDivisiones_quiz_v6.html">
+        <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-ec"/></svg></div>
+        <div class="text">
+          <p class="title">Ecuador</p>
+          <p class="desc">Divisiones de Ecuador</p>
+        </div>
+        <div class="arrow">→</div>
+      </a>
+
+<a class="item" href="ColombiaDivisiones_marcadores_proporcionales_v2.html">
+  <svg class="icon-flag" viewBox="0 0 32 20" aria-hidden="true">
+    <use href="#flag-co"></use>
+  </svg>
+  <div>
+    <div class="title">Colombia</div>
+    <div class="desc">Estados/Distritos</div>
+  </div>
+</a>
+
+      <a class="item" href="ChileDivisiones_quiz_v5.html">
+        <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-cl"/></svg></div>
+        <div class="text">
+          <p class="title">Chile</p>
+          <p class="desc">Divisiones de Chile</p>
+        </div>
+        <div class="arrow">→</div>
+      </a>
+
+
+    <a class="item" href="ArgeDep.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-ar"/></svg></div>
+      <div class="text">
+        <p class="title">Departamentos de Argentina</p>
+        <p class="desc">Ubicá los 502 departamentos y partidos en el mapa, con zoom y cronómetro</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+<a class="item" href="BrasilMunicipiosQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-br"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Brasil</p>
+    <p class="desc">Divisiones de Brasil</p>
+  </div>
+
+  <div class="arrow">→</div>
+</a>
+
+    <a class="item" href="kenia-regiones-quiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-ke"/></svg></div>
+      <div class="text">
+        <p class="title">Regiones de Kenia</p>
+        <p class="desc">Ubicá los 47 condados en el mapa de Kenia</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+   </div>
+
+   <div class="col">
+      <p class="col-header">Estados/Distritos Europa</p>
+
+    <a class="item" href="Espaquiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-es"/></svg></div>
+      <div class="text">
+        <p class="title">Provincias de España</p>
+        <p class="desc">Ubicá las 50 provincias en el mapa de España</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="EspañaQuiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-es"/></svg></div>
+      <div class="text">
+        <p class="title">Provincias de España v2</p>
+        <p class="desc">Ubicá las 50 provincias en el mapa de España</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="QuizAlemania.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-de"/></svg></div>
+      <div class="text">
+        <p class="title">Distritos de Alemania</p>
+        <p class="desc">Ubicá los distritos (Kreis) en el mapa de Alemania</p>
+<p class="title">Modificar mapa y jugabilidad</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+
+      <a class="item" href="FranciaDivisiones_quiz_v1.html">
+        <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-fr"/></svg></div>
+        <div class="text">
+          <p class="title">Francia</p>
+          <p class="desc">Divisiones de Francia</p>
+        </div>
+        <div class="arrow">→</div>
+      </a>
+
+    <a class="item" href="PoloniaPowiatQuiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-pl"/></svg></div>
+      <div class="text">
+        <p class="title">Powiats de Polonia</p>
+        <p class="desc">Ubicá los powiats en el mapa de Polonia</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+<a class="item" href="SueciaKommunQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-se"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Suecia</p>
+    <p class="desc">Divisiones de Suecia</p>
+  </div>
+
+  <div class="arrow">→</div>
+</a>
+
+<a class="item" href="TurquiaDistritosQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-tr"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Turquía</p>
+    <p class="desc">Divisiones de Turquía</p>
+  </div>
+
+  <div class="arrow">→</div>
+</a>
+
+<a class="item" href="ReinoUnidoQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-gb"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Reino Unido</p>
+    <p class="desc">Divisiones de Reino Unido</p>
+  </div>
+  <div class="arrow">→</div>
+</a>
+
+    </div>
+<div class="col">
+      <p class="col-header">Estados/Distritos Asia</p>
+
+
+
+      <a class="item" href="OmanPref.html">
+        <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-om"/></svg></div>
+        <div class="text">
+          <p class="title">Omán</p>
+          <p class="desc">Distritos de Omán</p>
+        </div>
+        <div class="arrow">→</div>
+      </a>
+
+    <a class="item" href="IndiaDistrictQuiz4.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-in"/></svg></div>
+      <div class="text">
+        <p class="title">Estados y Distritos de India</p>
+        <p class="desc">Ubicá los estados y distritos en el mapa de India</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+<a class="item" href="corea-del-sur-municipios-quiz.html">
+  <svg class="icon-flag" viewBox="0 0 32 20" aria-hidden="true">
+    <use href="#flag-kr"></use>
+  </svg>
+  <div>
+    <div class="title">Corea del Sur</div>
+    <div class="desc">Estados/Distritos</div>
+  </div>
+</a>
+
+    <a class="item" href="JapPref.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-jp"/></svg></div>
+      <div class="text">
+        <p class="title">Prefecturas de Japón</p>
+        <p class="desc">Ubicá las 47 prefecturas en el mapa, por regiones o todo Japón</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Filiquiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-ph"/></svg></div>
+      <div class="text">
+        <p class="title">Provincias de Filipinas</p>
+        <p class="desc">Ubicá las 80 provincias, filtrando por región</p>
+<p class="title">Cambiar mapa</p>
+
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="TailandiaDistritoQuiz.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-th"/></svg></div>
+      <div class="text">
+        <p class="title">Provincias de Tailandia</p>
+        <p class="desc">Ubicá las provincias en el mapa de Tailandia</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Indoquiz4.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-id"/></svg></div>
+      <div class="text">
+        <p class="title">Distritos de Indonesia</p>
+        <p class="desc">Ubicá los 514 kabupaten/kota en el mapa</p>
+ <p class="title">Esta bien pero estaria bien otro mapa</p>
+
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+<a class="item" href="AustraliaDistrictQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-au"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Australia</p>
+    <p class="desc">Divisiones de Australia</p>
+  </div>
+
+  <div class="arrow">→</div>
+</a>
+
+<a class="item" href="NewZelaQuiz.html">
+  <div class="icon-flag">
+    <svg viewBox="0 0 24 16">
+      <use href="#flag-nz"></use>
+    </svg>
+  </div>
+
+  <div class="text">
+    <p class="title">Nueva Zelanda</p>
+    <p class="desc">Divisiones de Nueva Zelanda</p>
+  </div>
+  <div class="arrow">→</div>
+</a>
+   </div>
+
+
+
+
+   <div class="col">
+    <p class="col-header">Teléfonos</p>
+
+    <a class="item" href="Mexicocodes.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-mx"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Teléfono México</p>
+        <p class="desc">Prefijos telefónicos por estado</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Usacodes.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-us"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Teléfono USA</p>
+        <p class="desc">Códigos de área por estado</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="codigos-brasil.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-br"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Brasil</p>
+        <p class="desc">Prefijos telefónicos (DDD) por estado</p>
+     <p class="title">Quitar a su debido tiempo</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Brazilcodes.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-br"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Teléfono Brasil v2</p>
+        <p class="desc">Prefijos telefónicos (DDD) por estado</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Spaincodes.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-es"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Teléfono España</p>
+        <p class="desc">Prefijos telefónicos por provincia</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="Francia_Codigos_Telefono_v43.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-fr"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos de Teléfono Francia</p>
+        <p class="desc">Departamentos y prefijos de Francia</p>
+        <p class="title">Cambiar mapa y jugabilidad</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="item" href="SurAfricacodes.html">
+      <div class="icon-flag"><svg viewBox="0 0 24 16"><use href="#flag-za"/></svg></div>
+      <div class="text">
+        <p class="title">Códigos Teléfono Sudáfrica</p>
+        <p class="desc">Prefijos telefónicos por región</p>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+   </div>
+
+  </nav>
+
+  <div class="route-strip" aria-hidden="true">
+    <svg viewBox="0 0 1320 46" preserveAspectRatio="none">
+      <line class="route-line" x1="0" y1="23" x2="1320" y2="23"/>
+      <g>
+        <g transform="translate(0,23) rotate(0)">
+          <g transform="translate(-13,-7)">
+            <path d="M2 9 L4 3 Q6 1 9 1 L18 1 Q21 1 23 3 L25 9 L25 12 Q25 13 24 13 L21 13 Q20 13 20 12 L20 11 L7 11 L7 12 Q7 13 6 13 L3 13 Q2 13 2 12 Z" fill="#1A5FAD" stroke="#0e3f77" stroke-width="0.6"/>
+            <path d="M6 9 L8 4 Q9 3 10.5 3 L16.5 3 Q18 3 19 4 L21 9 Z" fill="#8fb8e8"/>
+            <circle cx="7" cy="12.5" r="2" fill="#101216" stroke="#555" stroke-width="0.4"/>
+            <circle cx="20" cy="12.5" r="2" fill="#101216" stroke="#555" stroke-width="0.4"/>
+          </g>
+          <animateMotion dur="7s" repeatCount="indefinite" path="M -30,0 L 1350,0" keyPoints="0;1" keyTimes="0;1" calcMode="linear"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <footer>Entrenadores de meta para practicar GeoGuessr.</footer>
+</div>
+</body>
+</html>
