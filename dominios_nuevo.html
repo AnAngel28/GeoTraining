@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Geo Trainer - Dominios</title>
+
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #ffc93c;
+    --paint-dim: #8a7233;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color:var(--chalk);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{max-width:520px;margin:0 auto; padding:28px 16px 60px;}
+
+  header{margin-bottom:22px;}
+
+  .back-link{
+    display:inline-block;
+    color:var(--muted);
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    text-decoration:none;
+    margin-bottom:14px;
+    transition:color .15s ease;
+  }
+  .back-link:hover{color:var(--paint);}
+
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    color:var(--paint);
+    font-size:13px;
+    letter-spacing:.02em;
+    margin:0 0 4px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    line-height:1.15;
+    margin:0 0 8px;
+    text-align:left;
+  }
+  .sub{color:var(--muted); font-size:14.5px; line-height:1.5; margin:0;}
+
+  /* ---- Continentes ---- */
+  #continentes h1{ text-align:center; margin-bottom:22px; }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .botonContinente{
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--chalk);
+    font-family:'Oswald',sans-serif;
+    font-size:16px;
+    font-weight:600;
+    padding:22px 10px;
+    border-radius:12px;
+    cursor:pointer;
+    text-align:center;
+    transition:border-color .15s ease, transform .1s ease, background .15s ease;
+  }
+  .botonContinente:hover{border-color:var(--paint-dim); background:#292c34;}
+  .botonContinente:active{transform:scale(0.98);}
+
+  /* ---- Juego ---- */
+  #juego h1{ text-align:center; margin-bottom:18px; }
+  .estadisticas{
+    display:flex;
+    justify-content:space-between;
+    font-family:'Oswald',sans-serif;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .estadisticas b{color:var(--chalk); font-weight:600;}
+
+  .plate{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:34px 20px;
+    display:flex; align-items:center; justify-content:center;
+    min-height:140px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    margin-bottom:18px;
+  }
+  #dominio{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:56px;
+    color:var(--paint);
+  }
+
+  input{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--chalk);
+    padding:14px;
+    font-size:17px;
+    text-align:center;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+  }
+  input:focus{outline:none; border-color:var(--paint-dim);}
+  input.correcto{background:rgba(73,182,117,0.18); border-color:var(--ok); color:var(--ok);}
+  input.incorrecto{background:rgba(226,88,58,0.18); border-color:var(--bad); color:var(--bad);}
+
+  .botonera{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:14px;
+  }
+  button{
+    background:var(--paint);
+    color:#1a1a1a;
+    border:none;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform .1s ease;
+  }
+  button:hover{transform:translateY(-1px);}
+  button:active{transform:scale(0.98);}
+  button.secundario{
+    background:var(--card);
+    color:var(--chalk);
+    border:1px solid var(--line);
+  }
+
+  #resultado{
+    margin-top:14px;
+    min-height:24px;
+    font-size:14.5px;
+    text-align:center;
+    color:var(--muted);
+  }
+
+  /* ---- Pantalla final ---- */
+  #pantallaFinal{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:32px 20px;
+    text-align:center;
+  }
+  #pantallaFinal h2{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:24px;
+    margin-bottom:18px;
+  }
+  .resumen{
+    font-size:15px;
+    line-height:2;
+    color:var(--muted);
+    margin-bottom:22px;
+  }
+  .resumen b{color:var(--chalk);}
+  #pantallaFinal .botonera{grid-template-columns:1fr 1fr;}
+
+  @media(max-width:400px){
+    #dominio{font-size:44px;}
+  }
+</style>
+
+
+</head>
+
+
+
+<body>
+
+<div class="wrap">
+
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <header>
+    <p class="eyebrow">Geo Trainer</p>
+    <h1>Dominios de países</h1>
+    <p class="sub">Adiviná el país a partir de su terminación de dominio (.es, .br, .jp...).</p>
+  </header>
+
+<div id="menu" style="display:none">
+<div class="tarjeta" onclick="abrirContinentes()">🌐 Dominios</div>
+</div>
+
+<div id="continentes" style="display:block">
+
+<h1>Elegí un continente</h1>
+
+<div class="grid">
+<div class="botonContinente" onclick="elegirContinente('America')">🌎 América</div>
+<div class="botonContinente" onclick="elegirContinente('Europa')">🌍 Europa</div>
+<div class="botonContinente" onclick="elegirContinente('Asia')">🌏 Asia</div>
+<div class="botonContinente" onclick="elegirContinente('Africa')">🌍 África</div>
+<div class="botonContinente" onclick="elegirContinente('Oceania')">🌊 Oceanía</div>
+</div>
+
+</div>
+
+<div id="juego" style="display:none">
+
+<h1>Adiviná el país</h1>
+
+<div class="estadisticas">
+  <div>✅ Aciertos: <b id="aciertos">0</b></div>
+  <div>❌ Errores: <b id="errores">0</b></div>
+  <div>🎯 <b id="precision">0%</b></div>
+</div>
+
+<div class="plate">
+  <div id="dominio">.es</div>
+</div>
+
+<input id="respuesta" placeholder="Escribí el país" onkeydown="teclaEnter(event)">
+
+<div class="botonera">
+  <button class="secundario" onclick="comprobar()">Comprobar</button>
+  <button onclick="siguiente()">Siguiente →</button>
+</div>
+
+<div id="resultado"></div>
+
+</div>
+
+<div id="pantallaFinal" style="display:none">
+
+<h2>🎉 Test terminado</h2>
+
+<div class="resumen" id="resumen"></div>
+
+<div class="botonera">
+  <button onclick="repetirTest()">🔄 Repetir</button>
+  <button class="secundario" onclick="volverContinentes()">🌍 Continentes</button>
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+
+// ===============================
+// BASE DE DATOS DE DOMINIOS
+// AMÉRICA
+// ===============================
+
+
+const dominios = [
+
+
+// NORTEAMÉRICA
+
+{
+dominio:".us",
+pais:"Estados Unidos",
+continente:"America"
+},
+
+{
+dominio:".ca",
+pais:"Canadá",
+continente:"America"
+},
+
+{
+dominio:".mx",
+pais:"México",
+continente:"America"
+},
+
+
+
+
+// CENTROAMÉRICA
+
+
+{
+dominio:".gt",
+pais:"Guatemala",
+continente:"America"
+},
+
+{
+dominio:".hn",
+pais:"Honduras",
+continente:"America"
+},
+
+
+{
+dominio:".cr",
+pais:"Costa Rica",
+continente:"America"
+},
+
+{
+dominio:".pa",
+pais:"Panamá",
+continente:"America"
+},
+
+
+
+
+
+// CARIBE
+
+{
+dominio:".do",
+pais:"República Dominicana",
+continente:"America"
+},
+
+{
+dominio:".gd",
+pais:"Granada",
+continente:"America"
+},
+
+
+
+
+
+
+
+// SUDAMÉRICA
+
+
+{
+dominio:".br",
+pais:"Brasil",
+continente:"America"
+},
+
+{
+dominio:".ar",
+pais:"Argentina",
+continente:"America"
+},
+
+{
+dominio:".cl",
+pais:"Chile",
+continente:"America"
+},
+
+{
+dominio:".uy",
+pais:"Uruguay",
+continente:"America"
+},
+
+{
+dominio:".py",
+pais:"Paraguay",
+continente:"America"
+},
+
+{
+dominio:".bo",
+pais:"Bolivia",
+continente:"America"
+},
+
+{
+dominio:".pe",
+pais:"Perú",
+continente:"America"
+},
+
+{
+dominio:".ec",
+pais:"Ecuador",
+continente:"America"
+},
+
+{
+dominio:".co",
+pais:"Colombia",
+continente:"America"
+},
+
+{
+dominio:".ve",
+pais:"Venezuela",
+continente:"America"
+},
+
+
+
+];
+
+
+// ===============================
+// EUROPA
+// ===============================
+
+
+// Europa Occidental
+
+dominios.push(
+
+{
+dominio:".es",
+pais:"España",
+continente:"Europa"
+},
+
+{
+dominio:".fr",
+pais:"Francia",
+continente:"Europa"
+},
+
+{
+dominio:".de",
+pais:"Alemania",
+continente:"Europa"
+},
+
+{
+dominio:".it",
+pais:"Italia",
+continente:"Europa"
+},
+
+{
+dominio:".pt",
+pais:"Portugal",
+continente:"Europa"
+},
+
+{
+dominio:".be",
+pais:"Bélgica",
+continente:"Europa"
+},
+
+{
+dominio:".nl",
+pais:"Países Bajos",
+continente:"Europa"
+},
+
+{
+dominio:".lu",
+pais:"Luxemburgo",
+continente:"Europa"
+},
+
+
+
+// Europa del Norte
+
+{
+dominio:".uk",
+pais:"Reino Unido",
+continente:"Europa"
+},
+
+{
+dominio:".ie",
+pais:"Irlanda",
+continente:"Europa"
+},
+
+{
+dominio:".is",
+pais:"Islandia",
+continente:"Europa"
+},
+
+{
+dominio:".no",
+pais:"Noruega",
+continente:"Europa"
+},
+
+{
+dominio:".se",
+pais:"Suecia",
+continente:"Europa"
+},
+
+{
+dominio:".fi",
+pais:"Finlandia",
+continente:"Europa"
+},
+
+{
+dominio:".dk",
+pais:"Dinamarca",
+continente:"Europa"
+},
+
+
+
+// Europa Central
+
+{
+dominio:".ch",
+pais:"Suiza",
+continente:"Europa"
+},
+
+{
+dominio:".at",
+pais:"Austria",
+continente:"Europa"
+},
+
+{
+dominio:".pl",
+pais:"Polonia",
+continente:"Europa"
+},
+
+{
+dominio:".cz",
+pais:"Chequia",
+continente:"Europa"
+},
+
+{
+dominio:".sk",
+pais:"Eslovaquia",
+continente:"Europa"
+},
+
+{
+dominio:".hu",
+pais:"Hungría",
+continente:"Europa"
+},
+
+
+
+// Europa Oriental
+
+{
+dominio:".ru",
+pais:"Rusia",
+continente:"Europa"
+},
+
+{
+dominio:".ua",
+pais:"Ucrania",
+continente:"Europa"
+},
+
+{
+dominio:".by",
+pais:"Bielorrusia",
+continente:"Europa"
+},
+
+{
+dominio:".md",
+pais:"Moldavia",
+continente:"Europa"
+},
+
+
+
+// Balcanes
+
+{
+dominio:".gr",
+pais:"Grecia",
+continente:"Europa"
+},
+
+{
+dominio:".ro",
+pais:"Rumanía",
+continente:"Europa"
+},
+
+{
+dominio:".bg",
+pais:"Bulgaria",
+continente:"Europa"
+},
+
+{
+dominio:".hr",
+pais:"Croacia",
+continente:"Europa"
+},
+
+{
+dominio:".si",
+pais:"Eslovenia",
+continente:"Europa"
+},
+
+{
+dominio:".rs",
+pais:"Serbia",
+continente:"Europa"
+},
+
+{
+dominio:".ba",
+pais:"Bosnia y Herzegovina",
+continente:"Europa"
+},
+
+{
+dominio:".me",
+pais:"Montenegro",
+continente:"Europa"
+},
+
+{
+dominio:".mk",
+pais:"Macedonia del Norte",
+continente:"Europa"
+},
+
+{
+dominio:".al",
+pais:"Albania",
+continente:"Europa"
+},
+
+
+
+// Bálticos
+
+{
+dominio:".ee",
+pais:"Estonia",
+continente:"Europa"
+},
+
+{
+dominio:".lv",
+pais:"Letonia",
+continente:"Europa"
+},
+
+{
+dominio:".lt",
+pais:"Lituania",
+continente:"Europa"
+}
+
+);
+
+
+
+
+
+
+
+
+
+// ===============================
+// ASIA
+// ===============================
+
+
+dominios.push(
+
+
+{
+dominio:".jp",
+pais:"Japón",
+continente:"Asia"
+},
+
+{
+dominio:".cn",
+pais:"China",
+continente:"Asia"
+},
+
+{
+dominio:".kr",
+pais:"Corea del Sur",
+continente:"Asia"
+},
+
+{
+dominio:".in",
+pais:"India",
+continente:"Asia"
+},
+
+{
+dominio:".pk",
+pais:"Pakistán",
+continente:"Asia"
+},
+
+{
+dominio:".bd",
+pais:"Bangladés",
+continente:"Asia"
+},
+
+{
+dominio:".lk",
+pais:"Sri Lanka",
+continente:"Asia"
+},
+
+{
+dominio:".np",
+pais:"Nepal",
+continente:"Asia"
+},
+
+
+
+// Sudeste Asiático
+
+{
+dominio:".th",
+pais:"Tailandia",
+continente:"Asia"
+},
+
+{
+dominio:".vn",
+pais:"Vietnam",
+continente:"Asia"
+},
+
+{
+dominio:".id",
+pais:"Indonesia",
+continente:"Asia"
+},
+
+{
+dominio:".ph",
+pais:"Filipinas",
+continente:"Asia"
+},
+
+{
+dominio:".my",
+pais:"Malasia",
+continente:"Asia"
+},
+
+{
+dominio:".sg",
+pais:"Singapur",
+continente:"Asia"
+},
+
+{
+dominio:".kh",
+pais:"Camboya",
+continente:"Asia"
+},
+
+{
+dominio:".la",
+pais:"Laos",
+continente:"Asia"
+},
+
+{
+dominio:".mm",
+pais:"Myanmar",
+continente:"Asia"
+},
+
+
+
+// Asia Occidental
+
+{
+dominio:".tr",
+pais:"Turquía",
+continente:"Asia"
+},
+
+{
+dominio:".sa",
+pais:"Arabia Saudita",
+continente:"Asia"
+},
+
+{
+dominio:".ae",
+pais:"Emiratos Árabes Unidos",
+continente:"Asia"
+},
+
+{
+dominio:".il",
+pais:"Israel",
+continente:"Asia"
+},
+
+{
+dominio:".ir",
+pais:"Irán",
+continente:"Asia"
+},
+
+{
+dominio:".qa",
+pais:"Catar",
+continente:"Asia"
+}
+
+);
+
+
+// ===============================
+// ÁFRICA
+// ===============================
+
+
+dominios.push(
+
+
+{
+dominio:".za",
+pais:"Sudáfrica",
+continente:"Africa"
+},
+
+{
+dominio:".eg",
+pais:"Egipto",
+continente:"Africa"
+},
+
+{
+dominio:".ma",
+pais:"Marruecos",
+continente:"Africa"
+},
+
+{
+dominio:".dz",
+pais:"Argelia",
+continente:"Africa"
+},
+
+{
+dominio:".tn",
+pais:"Túnez",
+continente:"Africa"
+},
+
+{
+dominio:".ly",
+pais:"Libia",
+continente:"Africa"
+},
+
+
+
+// África Occidental
+
+{
+dominio:".ng",
+pais:"Nigeria",
+continente:"Africa"
+},
+
+{
+dominio:".gh",
+pais:"Ghana",
+continente:"Africa"
+},
+
+{
+dominio:".sn",
+pais:"Senegal",
+continente:"Africa"
+},
+
+{
+dominio:".ci",
+pais:"Costa de Marfil",
+continente:"Africa"
+},
+
+{
+dominio:".ml",
+pais:"Malí",
+continente:"Africa"
+},
+
+{
+dominio:".bf",
+pais:"Burkina Faso",
+continente:"Africa"
+},
+
+
+
+// África Central
+
+{
+dominio:".cm",
+pais:"Camerún",
+continente:"Africa"
+},
+
+{
+dominio:".cd",
+pais:"República Democrática del Congo",
+continente:"Africa"
+},
+
+{
+dominio:".cg",
+pais:"República del Congo",
+continente:"Africa"
+},
+
+{
+dominio:".ga",
+pais:"Gabón",
+continente:"Africa"
+},
+
+
+
+// África Oriental
+
+{
+dominio:".ke",
+pais:"Kenia",
+continente:"Africa"
+},
+
+{
+dominio:".et",
+pais:"Etiopía",
+continente:"Africa"
+},
+
+{
+dominio:".tz",
+pais:"Tanzania",
+continente:"Africa"
+},
+
+{
+dominio:".ug",
+pais:"Uganda",
+continente:"Africa"
+},
+
+{
+dominio:".rw",
+pais:"Ruanda",
+continente:"Africa"
+},
+
+
+
+// África Austral
+
+{
+dominio:".na",
+pais:"Namibia",
+continente:"Africa"
+},
+
+{
+dominio:".bw",
+pais:"Botsuana",
+continente:"Africa"
+},
+
+{
+dominio:".zm",
+pais:"Zambia",
+continente:"Africa"
+},
+
+{
+dominio:".zw",
+pais:"Zimbabue",
+continente:"Africa"
+}
+
+);
+
+
+
+
+
+
+
+
+
+// ===============================
+// OCEANÍA
+// ===============================
+
+
+dominios.push(
+
+
+{
+dominio:".au",
+pais:"Australia",
+continente:"Oceania"
+},
+
+{
+dominio:".nz",
+pais:"Nueva Zelanda",
+continente:"Oceania"
+},
+
+{
+dominio:".fj",
+pais:"Fiyi",
+continente:"Oceania"
+},
+
+{
+dominio:".sb",
+pais:"Islas Salomon",
+continente:"Oceania"
+}
+
+);
+
+
+
+
+
+
+
+
+
+// ===============================
+// VARIABLES DEL JUEGO
+// ===============================
+
+
+let listaActual = [];
+
+let actual = null;
+
+
+let continenteSeleccionado = "";
+
+
+
+let aciertos = 0;
+
+let errores = 0;
+
+
+
+let respondido = false;
+
+
+
+// ===============================
+// ABRIR CONTINENTES
+// ===============================
+
+function abrirContinentes(){
+
+    document.getElementById("menu").style.display="none";
+
+    document.getElementById("continentes").style.display="block";
+
+}
+
+
+
+
+
+
+// ===============================
+// ELEGIR CONTINENTE
+// ===============================
+
+function elegirContinente(nombre){
+
+
+    continenteSeleccionado = nombre;
+
+
+    listaActual = dominios.filter(
+        d => d.continente === nombre
+    );
+
+
+    mezclar(listaActual);
+
+
+
+    aciertos = 0;
+
+    errores = 0;
+
+
+    actualizarDatos();
+
+
+
+    document.getElementById("continentes").style.display="none";
+
+    document.getElementById("juego").style.display="block";
+
+
+    document.getElementById("pantallaFinal").style.display="none";
+
+
+    siguiente();
+
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// MEZCLAR DOMINIOS
+// ===============================
+
+
+function mezclar(array){
+
+
+    for(let i=array.length-1;i>0;i--){
+
+
+        let j = Math.floor(Math.random()*(i+1));
+
+
+        [array[i],array[j]] = [array[j],array[i]];
+
+
+    }
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// SIGUIENTE DOMINIO
+// ===============================
+
+
+function siguiente(){
+
+
+
+    // Si terminó el test
+
+    if(listaActual.length === 0){
+
+
+        terminarTest();
+
+
+        return;
+
+
+    }
+
+
+
+    actual = listaActual.pop();
+
+
+
+    document.getElementById("dominio").textContent =
+    actual.dominio;
+
+
+
+    document.getElementById("respuesta").value="";
+
+
+    document.getElementById("respuesta").className="";
+
+
+    document.getElementById("resultado").textContent="";
+
+
+    respondido=false;
+
+
+
+    document.getElementById("respuesta").focus();
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// QUITAR TILDES
+// ===============================
+
+
+function normalizar(texto){
+
+
+return texto
+
+.toLowerCase()
+
+.normalize("NFD")
+
+.replace(/[\u0300-\u036f]/g,"")
+
+.trim();
+
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// COMPROBAR RESPUESTA
+// ===============================
+
+
+function comprobar(){
+
+
+    if(respondido){
+
+        return;
+
+    }
+
+
+
+    let respuesta = normalizar(
+
+        document.getElementById("respuesta").value
+
+    );
+
+
+
+    let correcta = normalizar(
+
+        actual.pais
+
+    );
+
+
+
+    let caja = document.getElementById("respuesta");
+
+
+
+    if(respuesta === correcta){
+
+
+
+        aciertos++;
+
+
+
+        document.getElementById("resultado").textContent =
+        "✅ ¡Correcto!";
+
+
+
+        document.getElementById("resultado").style.color =
+        "#22c55e";
+
+
+
+        caja.className="correcto";
+
+
+
+    }else{
+
+
+        errores++;
+
+
+
+        document.getElementById("resultado").textContent =
+        "❌ Incorrecto. Era " + actual.pais;
+
+
+
+        document.getElementById("resultado").style.color =
+        "#ef4444";
+
+
+
+        caja.className="incorrecto";
+
+
+
+    }
+
+
+
+    respondido=true;
+
+
+
+    actualizarDatos();
+
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// ENTER
+// ===============================
+
+
+function teclaEnter(event){
+
+
+    if(event.key === "Enter"){
+
+
+
+        if(respondido){
+
+
+            siguiente();
+
+
+        }else{
+
+
+            comprobar();
+
+
+        }
+
+
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// ESTADÍSTICAS
+// ===============================
+
+
+function actualizarDatos(){
+
+
+    document.getElementById("aciertos").textContent =
+    aciertos;
+
+
+
+    document.getElementById("errores").textContent =
+    errores;
+
+
+
+    let total = aciertos + errores;
+
+
+
+    let porcentaje = 0;
+
+
+
+    if(total > 0){
+
+
+        porcentaje = Math.round(
+
+            (aciertos / total) * 100
+
+        );
+
+
+    }
+
+
+
+    document.getElementById("precision").textContent =
+    porcentaje + "%";
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// FINAL DEL TEST
+// ===============================
+
+
+function terminarTest(){
+
+
+    document.getElementById("juego").style.display="none";
+
+
+    document.getElementById("pantallaFinal").style.display="block";
+
+
+
+    let total = aciertos + errores;
+
+
+
+    let porcentaje = 0;
+
+
+
+    if(total > 0){
+
+
+        porcentaje = Math.round(
+
+        (aciertos / total) * 100
+
+        );
+
+
+    }
+
+
+
+    document.getElementById("resumen").innerHTML = `
+
+    Continente: <b>${continenteSeleccionado}</b>
+    <br><br>
+
+    ✅ Aciertos: <b>${aciertos}</b>
+
+    <br>
+
+    ❌ Errores: <b>${errores}</b>
+
+    <br>
+
+    🎯 Precisión: <b>${porcentaje}%</b>
+
+    `;
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// REPETIR TEST
+// ===============================
+
+
+function repetirTest(){
+
+
+
+    listaActual = dominios.filter(
+
+        d => d.continente === continenteSeleccionado
+
+    );
+
+
+
+    mezclar(listaActual);
+
+
+
+    aciertos = 0;
+
+    errores = 0;
+
+
+
+    actualizarDatos();
+
+
+
+    document.getElementById("pantallaFinal").style.display="none";
+
+
+    document.getElementById("juego").style.display="block";
+
+
+
+    siguiente();
+
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// VOLVER A CONTINENTES
+// ===============================
+
+
+function volverContinentes(){
+
+
+
+    document.getElementById("pantallaFinal").style.display="none";
+
+
+    document.getElementById("continentes").style.display="block";
+
+
+}
+
+</script>
+
+</body>
+</html>
