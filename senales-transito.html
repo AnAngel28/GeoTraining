@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚦 GeoGuessr Señales de Tránsito</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #708090;
+    --paint-dim: #63666a;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #ffffff;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-placeholder {
+    color: #8a8d94;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: .02em;
+    border: 2px dashed #c9c6ba;
+    border-radius: 10px;
+    padding: 18px 26px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 150px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+.study-image.multi { display: block; overflow-x: auto; scroll-snap-type: x mandatory; white-space: nowrap; -webkit-overflow-scrolling: touch; } .study-image.multi::-webkit-scrollbar { height: 6px; } .study-image.multi::-webkit-scrollbar-thumb { background: var(--paint-dim); border-radius: 999px; } .study-image.multi img { display: inline-block; width: 100%; height: 150px; object-fit: contain; scroll-snap-align: start; vertical-align: middle; } 
+
+  .no-image {
+    color: #8a8d94;
+
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+
+    text-align: center;
+
+    padding: 16px;
+    border: 2px dashed #c9c6ba;
+    border-radius: 8px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    padding: 40px 0;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 100px;
+    }
+
+    .image-container {
+      height: 230px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+
+
+<body>
+
+<header>
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <h1>🚦 Señales de transito parte trasera</h1>
+  <div class="mode-buttons">
+    <button id="btn-quiz" class="active" onclick="showSection('quiz')">Quiz</button>
+    <button id="btn-study" onclick="showSection('study')">Estudiar</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="section active">
+    <div class="quiz-layout">
+
+      <div class="quiz-container">
+        <div class="quiz-continent-label" id="quiz-continent-label">Mostrando: Todos los continentes</div>
+        <h2>¿A qué país pertenece esta señal de transito?</h2>
+
+<div class="image-container" id="quiz-image-container"> <div class="image-placeholder">Aquí va la imagen</div> </div>
+
+        <div class="answer-buttons" id="answer-buttons"></div>
+
+        <div id="result"></div>
+        <div id="explanation"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+
+        <div class="stats" id="stats">Aciertos: 0 / 0</div>
+      </div>
+
+      <div class="continent-buttons" id="continent-buttons"></div>
+
+    </div>
+  </section>
+
+  <!-- ============ ESTUDIAR ============ -->
+  <section id="study" class="section">
+    <div class="study-controls">
+      <input type="text" id="search-input" placeholder="Buscar país o pista..." oninput="renderStudyGrid()">
+      <select id="continent-select" onchange="renderStudyGrid()">
+        <option value="Todos">Todos los continentes</option>
+      </select>
+    </div>
+
+    <div class="study-grid" id="study-grid"></div>
+  </section>
+
+</main>
+
+
+<script>
+
+  const trafficSigns = [
+    {
+      country: "Brazil",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/brazil.png"
+    },
+    {
+      country: "Chile",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/chile.png"
+    },
+    {
+      country: "Colombia",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/colombia.png"
+    },
+    {
+      country: "Ecuador",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/ecuador.png", "imagenesatras/ecuador2.png"]
+    },
+    {
+      country: "Peru",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/peru.png"
+    },
+    {
+      country: "Uruguay",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/uruguay.png"
+    },
+    {
+      country: "Australia",
+      continent: "Oceanía",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/australia.png"
+    },
+    {
+      country: "Guam",
+      continent: "Oceanía",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/guam.png", "imagenesatras/guam2.png"]
+    },
+    {
+      country: "Nueva Zelanda",
+      continent: "Oceanía",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/newzela.png", "imagenesatras/newzela2.png"]
+    },
+    {
+      country: "Albania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/albania.png", "imagenesatras/albania2.png", "imagenesatras/albania3.png"]
+    },
+    {
+      country: "Alemania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/alemania.png", "imagenesatras/alemania2.png"]
+    },
+    {
+      country: "Andorra",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/andorra.png", "imagenesatras/andorra2.png"]
+    },
+    {
+      country: "Republica Checa",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/chequia.png", "imagenesatras/chequia2.png"]
+    },
+    {
+      country: "Croacia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/croacia.png", "imagenesatras/croacia2.png"]
+    },
+    {
+      country: "Cyprus",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/cyprus.png"
+    },
+    {
+      country: "Eslovenia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/eslovenia.png", "imagenesatras/eslovenia2.png"]
+    },
+    {
+      country: "España",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/españa.png"
+    },
+    {
+      country: "Finlandia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/finlandia.png"
+    },
+    {
+      country: "Hungria",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/hungria.png"
+    },
+    {
+      country: "Irlanda",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/irlanda.png"
+    },
+    {
+      country: "Italia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/italia.png"
+    },
+    {
+      country: "Letonia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/leto.png", "imagenesatras/leto2.png"]
+    },
+    {
+      country: "Liechtenstein",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/lich.png"
+    },
+    {
+      country: "Lituania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/lituania.png", "imagenesatras/lituania2.png"]
+    },
+    {
+      country: "Luxemburgo",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/luxe.png", "imagenesatras/luxe2.png"]
+    },
+    {
+      country: "Macedonia del Norte",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/macedonia.png", "imagenesatras/macedonia2.png"]
+    },
+    {
+      country: "Malta",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/malta.png", "imagenesatras/malta2.png"]
+    },
+    {
+      country: "Monaco",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/monaco.png"
+    },
+    {
+      country: "Montenegro",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/montenegro.png"
+    },
+    {
+      country: "Noruega",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/noruega.png", "imagenesatras/noruega2.png"]
+    },
+    {
+      country: "Paises Bajos",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/paises.png", "imagenesatras/paises2.png", "imagenesatras/paises3.png"]
+    },
+    {
+      country: "Portugal",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/portugal.png"
+    },
+    {
+      country: "Reino Unido",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/reino.png", "imagenesatras/reino2.png"]
+    },
+    {
+      country: "Serbia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/serbia.png", "imagenesatras/serbia2.png", "imagenesatras/serbia3.png"]
+    },
+    {
+      country: "Suecia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/suecia.png", "imagenesatras/suecia2.png"]
+    },
+    {
+      country: "Costa Rica",
+      continent: "Norteamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/costarica.png", "imagenesatras/costarica2.png"]
+    },
+    {
+      country: "Estados Unidos",
+      continent: "Norteamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/estadosuni.png", "imagenesatras/estadosuni2.png"]
+    },
+    {
+      country: "Panama",
+      continent: "Norteamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/panama.png"
+    },
+    {
+      country: "Puerto Rico",
+      continent: "Norteamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/puerto.png"
+    },
+    {
+      country: "Republica Dominicana",
+      continent: "Norteamérica",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/repu.png"
+    },
+    {
+      country: "Botswana",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/botswana.png",
+    },
+    {
+      country: "Egipto",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/egypto.png"
+    },
+    {
+      country: "Namibia",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/namibia.png"
+    },
+    {
+      country: "Senegal",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/senegal.png"
+    },
+    {
+      country: "Sur Africa",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/surafrica.png"
+    },
+    {
+      country: "Tunisia",
+      continent: "África",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/tunisia.png"
+    },
+    {
+      country: "Cambodia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/cambodia.png"
+    },
+    {
+      country: "Corea del Sur",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/corea.png"
+    },
+    {
+      country: "Emiratos Arabes Unidos",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/eau.png", "imagenesatras/eau2.png"]
+    },
+    {
+      country: "India",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/india.png"
+    },
+    {
+      country: "Indonesia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/indo.png"
+    },
+    {
+      country: "Israel",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/israel.png", "imagenesatras/israel2.png"]
+    },
+    {
+      country: "Japon",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/japon.png", "imagenesatras/japon2.png"]
+    },
+    {
+      country: "Kazahkstan",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/kaza.png"
+    },
+    {
+      country: "Laos",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/laos.png"
+    },
+    {
+      country: "Malaysia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/malaysia.png"
+    },
+    {
+      country: "Isla Navidad",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/navidad.png"
+    },
+    {
+      country: "Oman",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imagenesatras/oman.png"
+    },
+    {
+      country: "Tailandia",
+      continent: "Asia",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imagenesatras/thai.png", "imagenesatras/thai2.png"]
+    },
+  ];
+
+  const continents = ["Todos", "Norteamérica", "Sudamérica", "Europa", "Asia", "África", "Oceanía"];
+
+  let currentQuizContinent = "Todos";
+  let currentCorrect = null;
+  let score = 0;
+  let total = 0;
+  let answered = false;
+
+  function normalize(str) {
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function showSection(section) {
+    document.getElementById("quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("study").classList.toggle("active", section === "study");
+    document.getElementById("btn-quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("btn-study").classList.toggle("active", section === "study");
+  }
+
+  function buildContinentButtons() {
+    const container = document.getElementById("continent-buttons");
+    container.innerHTML = "";
+    continents.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "continent-btn" + (c === currentQuizContinent ? " active" : "");
+      btn.textContent = c;
+      btn.onclick = () => selectQuizContinent(c);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectQuizContinent(continent) {
+    currentQuizContinent = continent;
+    document.querySelectorAll(".continent-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent === continent);
+    });
+    document.getElementById("quiz-continent-label").textContent =
+      continent === "Todos" ? "Mostrando: Todos los continentes" : "Mostrando: " + continent;
+    score = 0;
+    total = 0;
+    updateStats();
+    nextQuestion();
+  }
+
+  function getQuizPool() {
+    if (currentQuizContinent === "Todos") return trafficSigns;
+    const filtered = trafficSigns.filter(r => r.continent === currentQuizContinent);
+    return filtered.length >= 2 ? filtered : trafficSigns;
+  }
+
+  function nextQuestion() {
+    answered = false;
+    const pool = getQuizPool();
+    currentCorrect = pool[Math.floor(Math.random() * pool.length)];
+
+function pickImage(item) { if (!item.image) return null; if (Array.isArray(item.image)) { return item.image[Math.floor(Math.random() * item.image.length)]; } return item.image; } const imgBox = document.getElementById("quiz-image-container"); const chosenImage = pickImage(currentCorrect); if (chosenImage) { imgBox.innerHTML = '<img src="' + chosenImage + '" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">'; } else { imgBox.innerHTML = '<div class="image-placeholder">Aquí va la imagen</div>'; } 
+
+    let wrongPool = pool.filter(r => r.country !== currentCorrect.country); if (wrongPool.length < 3) { wrongPool = trafficSigns.filter(r => r.country !== currentCorrect.country); } const shuffledWrong = [...wrongPool].sort(() => Math.random() - 0.5); const wrongs = shuffledWrong.slice(0, 3); const options = [currentCorrect, ...wrongs].sort(() => Math.random() - 0.5); 
+
+    const container = document.getElementById("answer-buttons");
+    container.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = opt.country;
+      btn.onclick = () => checkAnswer(opt, btn);
+      container.appendChild(btn);
+    });
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("explanation").textContent = "";
+    document.getElementById("next-btn").disabled = true;
+  }
+
+  function checkAnswer(selected, btnEl) {
+    if (answered) return;
+    answered = true;
+    total++;
+
+    const buttons = document.querySelectorAll(".answer-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === currentCorrect.country) {
+        btn.classList.add("correct");
+      }
+    });
+
+    const resultEl = document.getElementById("result");
+    if (selected.country === currentCorrect.country) {
+      score++;
+      resultEl.textContent = "¡Correcto!";
+      resultEl.style.color = "var(--ok)";
+    } else {
+      btnEl.classList.add("incorrect");
+      resultEl.textContent = "Incorrecto. Era: " + currentCorrect.country;
+      resultEl.style.color = "var(--bad)";
+    }
+
+    document.getElementById("explanation").textContent = currentCorrect.description;
+    document.getElementById("next-btn").disabled = false;
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById("stats").textContent = "Aciertos: " + score + " / " + total;
+  }
+
+  function buildContinentSelect() {
+    const select = document.getElementById("continent-select");
+    continents.filter(c => c !== "Todos").forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderStudyGrid() {
+    const search = normalize(document.getElementById("search-input").value.trim());
+    const continent = document.getElementById("continent-select").value;
+
+    const filtered = trafficSigns.filter(r => {
+      const matchesContinent = continent === "Todos" || r.continent === continent;
+      const haystack = normalize(r.country + " " + r.description + " " + r.tags.join(" "));
+      const matchesSearch = search === "" || haystack.includes(search);
+      return matchesContinent && matchesSearch;
+    });
+
+    const grid = document.getElementById("study-grid");
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No se encontraron resultados.</div>';
+      return;
+    }
+
+    filtered.forEach(r => { const card = document.createElement("div"); card.className = "study-card"; const images = Array.isArray(r.image) ? r.image : (r.image ? [r.image] : []); let imageHtml; if (images.length === 0) { imageHtml = '<div class="study-image"><div class="no-image">Aquí va la imagen</div></div>'; } else if (images.length === 1) { imageHtml = `<div class="study-image"><img src="${images[0]}" style="width:100%;height:100%;object-fit:contain;"></div>`; } else { imageHtml = `<div class="study-image multi">${images.map(src => `<img src="${src}">`).join("")}</div>`; } card.innerHTML = ` ${imageHtml} <div class="study-content"> <h3>${r.country}</h3> <div class="continent">${r.continent}</div> <p>${r.description}</p> <div class="tags"> ${r.tags.map(t => `<span class="tag">${t}</span>`).join("")} </div> </div> `; grid.appendChild(card); });
+  }
+
+  // Init
+  buildContinentButtons();
+  buildContinentSelect();
+  nextQuestion();
+  renderStudyGrid();
+
+</script>
+
+</body>
+</html>

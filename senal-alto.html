@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛑 GeoGuessr Señal de Alto</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #cc0a00;
+    --paint-dim: #810600;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #ffffff;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-placeholder {
+    color: #8a8d94;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: .02em;
+    border: 2px dashed #c9c6ba;
+    border-radius: 10px;
+    padding: 18px 26px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 150px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .no-image {
+    color: #8a8d94;
+
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+
+    text-align: center;
+
+    padding: 16px;
+    border: 2px dashed #c9c6ba;
+    border-radius: 8px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    padding: 40px 0;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 100px;
+    }
+
+    .image-container {
+      height: 230px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+.music-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); color: var(--chalk); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; z-index: 999; transition: border-color .15s ease; } .music-toggle:hover { border-color: var(--paint-dim); }
+</style>
+</head>
+
+
+<body>
+<button class="music-toggle" id="music-toggle" onclick="toggleMusic()">▶️</button> <audio id="bg-music" loop> <source src="musica/cancion.mp3" type="audio/mpeg"> </audio>
+<header>
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <h1>🛑 Señal de Alto</h1>
+  <div class="mode-buttons">
+    <button id="btn-quiz" class="active" onclick="showSection('quiz')">Quiz</button>
+    <button id="btn-study" onclick="showSection('study')">Estudiar</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="section active">
+    <div class="quiz-layout">
+
+      <div class="quiz-container">
+        <div class="quiz-continent-label" id="quiz-continent-label">Mostrando: Todos los continentes</div>
+        <h2>¿A qué país pertenece esta señal de alto?</h2>
+
+<div class="image-container" id="quiz-image-container"> <div class="image-placeholder">Aquí va la imagen</div> </div> 
+
+        <div class="answer-buttons" id="answer-buttons"></div>
+
+        <div id="result"></div>
+        <div id="explanation"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+
+        <div class="stats" id="stats">Aciertos: 0 / 0</div>
+      </div>
+
+      <div class="continent-buttons" id="continent-buttons"></div>
+
+    </div>
+  </section>
+
+  <!-- ============ ESTUDIAR ============ -->
+  <section id="study" class="section">
+    <div class="study-controls">
+      <input type="text" id="search-input" placeholder="Buscar país o pista..." oninput="renderStudyGrid()">
+      <select id="continent-select" onchange="renderStudyGrid()">
+        <option value="Todos">Todos los continentes</option>
+      </select>
+    </div>
+
+    <div class="study-grid" id="study-grid"></div>
+  </section>
+
+</main>
+
+
+<script>
+function toggleMusic() { const audio = document.getElementById("bg-music"); const btn = document.getElementById("music-toggle"); if (audio.paused) { audio.play(); btn.textContent = "⏸️"; } else { audio.pause(); btn.textContent = "▶️"; } }
+  const stopSigns = [
+    {
+      country: "Japón",
+      continent: "Asia",
+      description: "El caso más distintivo del mundo: en vez del octágono universal, Japón usa un triángulo invertido rojo con el texto '止まれ' (tomare), una forma que no se repite en ningún otro país.",
+      tags: ["triángulo invertido", "texto japonés", "forma única"],
+image: "imagenesstop/japon.png"
+    },
+    {
+      country: "México",
+      continent: "Norteamérica",
+      description: "El octágono rojo es igual al del resto del mundo, pero el texto dice 'ALTO' en vez de 'STOP', igual que en gran parte de Centroamérica.",
+      tags: ["ALTO", "Centroamérica"],
+image: "imagenesstop/mexico.png"
+    },
+    {
+      country: "Sudamerica",
+      continent: "Sudamérica",
+      description: "Mismo octágono rojo universal, pero con la palabra 'PARE' en vez de 'STOP', tal como en la mayoría de los países hispanohablantes y Brasil en Sudamérica.",
+      tags: ["PARE", "Sudamérica"],
+image: "imagenesstop/chile.png"
+    },
+    {
+      country: "Europa",
+      continent: "Europa",
+      description: "A diferencia de México ('ALTO') y de Sudamérica ('PARE'), Europa no traduce la palabra: su señal de alto dice 'STOP' directamente en inglés, igual que la mayoría de Europa.",
+      tags: ["STOP en inglés", "no traducido"],
+image: "imagenesstop/europa.png"
+    },
+    {
+      country: "India",
+      continent: "Asia",
+      description: "Mismo octágono rojo universal, pero con la palabra 'ALTO' pero con escritura Indi",
+      tags: ["STOP en inglés", "Indo"],
+image: "imagenesstop/india.png"
+    },
+    {
+      country: "Tunisia",
+      continent: "África",
+      description: "únez tiene una señal de stop bastante singular con escritura árabe y latina. NOTA: Se pueden encontrar señales de pare similares en Jordania y los Emiratos Árabes Unidos.",
+      tags: ["STOP en inglés", "no traducido"],
+image: "imagenesstop/tunisia.png"
+    },
+    {
+      country: "Panama",
+      continent: "NorteAmérica",
+      description: "Al igual que México, la señal dice 'ALTO', pero en Panamá el texto se ve en una tipografía más grande y en negrita, a diferencia del trazo más delgado que se usa en México.",
+      tags: ["ALTO en negrita", "tipografía más gruesa"],
+image: "imagenesstop/panama.png"
+    },
+    {
+      country: "Mongolia",
+      continent: "Asia",
+      description: "Una característica exclusiva de Mongolia es la señal de pare “ЗОГС”. ",
+      tags: ["STOP en Mongol", "ЗОГС"],
+image: "imagenesstop/mongolia.png"
+    },
+    {
+      country: "Malaysia",
+      continent: "Asia",
+      description: "Las señales de pare BERHENTI y las señales de ceda el paso BERI LALUAN son exclusivas de Malasia.",
+      tags: ["BARHENTI", "BERI LALUAN"],
+image: "imagenesstop/malaysia.png"
+    },
+    {
+      country: "Laos",
+      continent: "Asia",
+      description: "Las señales de stop presentan la escritura laosiana. A veces, el cartel presenta la palabra ‘stop’ en escritura latina debajo de la escritura laosiana. NOTA: En Laos, las señales de stop solo tienen 2 caracteres, en comparación con 3 en Tailandia.",
+      tags: ["STOP en laosiano",],
+image: "imagenesstop/laos.png"
+    },
+    {
+      country: "Canadá",
+      continent: "Norteamérica",
+      description: "En la provincia de Quebec, de habla francesa, la señal de alto suele decir 'ARRÊT' (a veces junto a 'STOP'), muy distinta al resto de Canadá y EE. UU. que solo usan 'STOP'.",
+      tags: ["ARRÊT bilingüe", "Quebec"],
+image: "imagenesstop/canada.png"
+    },
+    {
+      country: "Corea del Sur",
+      continent: "Asia",
+      description: "Uno de los pocos países asiáticos que traduce la palabra: la señal usa el texto coreano '정지' en vez de 'STOP', manteniendo la forma de octágono universal.",
+      tags: ["정지 coreano", "texto traducido"],
+image: "imagenesstop/corea.png"
+    },
+    {
+      country: "Israel",
+      continent: "Asia",
+      description: "La señal de alto suele ser multilingüe, con el texto en hebreo 'עצור' acompañado frecuentemente de árabe e inglés en el mismo cartel. Pero igualmente puede ser la señal una mano",
+      tags: ["hebreo עצור", "señal multilingüe"],
+image: "imagenesstop/israel.png"
+    },
+    {
+      country: "Turquía",
+      continent: "Europa",
+      description: "El mismo octágono rojo universal, pero con la palabra 'DUR' (que significa 'detente' en turco) en vez de 'STOP'.",
+      tags: ["DUR", "turco"],
+image: "imagenesstop/turquia.png"
+    },
+    {
+      country: "Tailandia",
+      continent: "Asia",
+      description: "La señal de alto usa el texto en tailandés 'หยุด' (que se lee 'yut' y significa 'detente') en vez de la palabra 'STOP', manteniendo la forma de octágono universal.",
+      tags: ["หยุด tailandés", "texto traducido"],
+image: "imagenesstop/thailand.png"
+    }
+  ];
+
+  const continents = ["Todos", "Norteamérica", "Sudamérica", "Europa", "Asia", "África"];
+
+  let currentQuizContinent = "Todos";
+  let quizQueue = [];
+
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  let currentCorrect = null;
+  let score = 0;
+  let total = 0;
+  let answered = false;
+
+  function normalize(str) {
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function showSection(section) {
+    document.getElementById("quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("study").classList.toggle("active", section === "study");
+    document.getElementById("btn-quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("btn-study").classList.toggle("active", section === "study");
+  }
+
+  function buildContinentButtons() {
+    const container = document.getElementById("continent-buttons");
+    container.innerHTML = "";
+    continents.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "continent-btn" + (c === currentQuizContinent ? " active" : "");
+      btn.textContent = c;
+      btn.onclick = () => selectQuizContinent(c);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectQuizContinent(continent) {
+    currentQuizContinent = continent;
+    quizQueue = [];
+    document.querySelectorAll(".continent-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent === continent);
+    });
+    document.getElementById("quiz-continent-label").textContent =
+      continent === "Todos" ? "Mostrando: Todos los continentes" : "Mostrando: " + continent;
+    score = 0;
+    total = 0;
+    updateStats();
+    nextQuestion();
+  }
+
+  function getQuizPool() {
+    if (currentQuizContinent === "Todos") return stopSigns;
+    const filtered = stopSigns.filter(r => r.continent === currentQuizContinent);
+    return filtered.length >= 2 ? filtered : stopSigns;
+  }
+
+  function nextQuestion() {
+    answered = false;
+    const pool = getQuizPool();
+    if (quizQueue.length === 0) {
+      quizQueue = shuffleArray(pool);
+    }
+    currentCorrect = quizQueue.pop();
+const imgBox = document.getElementById("quiz-image-container"); if (currentCorrect.image) { imgBox.innerHTML = '<img src="' + currentCorrect.image + '" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">'; } else { imgBox.innerHTML = '<div class="image-placeholder">Aquí va la imagen</div>'; }
+
+    let wrongPool = pool.filter(r => r.country !== currentCorrect.country);
+    if (wrongPool.length === 0) {
+      wrongPool = stopSigns.filter(r => r.country !== currentCorrect.country);
+    }
+    const wrong = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+
+    const options = Math.random() < 0.5
+      ? [currentCorrect, wrong]
+      : [wrong, currentCorrect];
+
+    const container = document.getElementById("answer-buttons");
+    container.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = opt.country;
+      btn.onclick = () => checkAnswer(opt, btn);
+      container.appendChild(btn);
+    });
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("explanation").textContent = "";
+    document.getElementById("next-btn").disabled = true;
+  }
+
+  function checkAnswer(selected, btnEl) {
+    if (answered) return;
+    answered = true;
+    total++;
+
+    const buttons = document.querySelectorAll(".answer-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === currentCorrect.country) {
+        btn.classList.add("correct");
+      }
+    });
+
+    const resultEl = document.getElementById("result");
+    if (selected.country === currentCorrect.country) {
+      score++;
+      resultEl.textContent = "¡Correcto!";
+      resultEl.style.color = "var(--ok)";
+    } else {
+      btnEl.classList.add("incorrect");
+      resultEl.textContent = "Incorrecto. Era: " + currentCorrect.country;
+      resultEl.style.color = "var(--bad)";
+    }
+
+    document.getElementById("explanation").textContent = currentCorrect.description;
+    document.getElementById("next-btn").disabled = false;
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById("stats").textContent = "Aciertos: " + score + " / " + total;
+  }
+
+  function buildContinentSelect() {
+    const select = document.getElementById("continent-select");
+    continents.filter(c => c !== "Todos").forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderStudyGrid() {
+    const search = normalize(document.getElementById("search-input").value.trim());
+    const continent = document.getElementById("continent-select").value;
+
+    const filtered = stopSigns.filter(r => {
+      const matchesContinent = continent === "Todos" || r.continent === continent;
+      const haystack = normalize(r.country + " " + r.description + " " + r.tags.join(" "));
+      const matchesSearch = search === "" || haystack.includes(search);
+      return matchesContinent && matchesSearch;
+    });
+
+    const grid = document.getElementById("study-grid");
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No se encontraron resultados.</div>';
+      return;
+    }
+
+    filtered.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "study-card";
+      card.innerHTML = `
+   <div class="study-image"> ${r.image ? '<img src="' + r.image + '" style="width:100%;height:100%;object-fit:contain;">' : '<div class="no-image">Aquí va la imagen</div>'} </div>
+        <div class="study-content">
+          <h3>${r.country}</h3>
+          <div class="continent">${r.continent}</div>
+          <p>${r.description}</p>
+          <div class="tags">
+            ${r.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Init
+  buildContinentButtons();
+  buildContinentSelect();
+  nextQuestion();
+  renderStudyGrid();
+
+</script>
+
+</body>
+</html>

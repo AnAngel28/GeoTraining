@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔀 GeoGuessr Chevrons de Curva</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #ffc93c;
+    --paint-dim: #8a7233;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-placeholder {
+    color: #8a8d94;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: .02em;
+    border: 2px dashed #c9c6ba;
+    border-radius: 10px;
+    padding: 18px 26px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 150px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .no-image {
+    color: #8a8d94;
+
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+
+    text-align: center;
+
+    padding: 16px;
+    border: 2px dashed #c9c6ba;
+    border-radius: 8px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    padding: 40px 0;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 100px;
+    }
+
+    .image-container {
+      height: 230px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+
+
+<body>
+
+<header>
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <h1>🔀 Chevrons de Curva</h1>
+  <div class="mode-buttons">
+    <button id="btn-quiz" class="active" onclick="showSection('quiz')">Quiz</button>
+    <button id="btn-study" onclick="showSection('study')">Estudiar</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="section active">
+    <div class="quiz-layout">
+
+      <div class="quiz-container">
+        <div class="quiz-continent-label" id="quiz-continent-label">Mostrando: Todos los continentes</div>
+        <h2>¿A qué país pertenece esta señal de curva?</h2>
+
+        <div class="image-container" id="quiz-image-container"> 
+	<div class="image-placeholder">Aquí va la imagen</div> 
+	</div> 
+
+        <div class="answer-buttons" id="answer-buttons"></div>
+
+        <div id="result"></div>
+        <div id="explanation"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+
+        <div class="stats" id="stats">Aciertos: 0 / 0</div>
+      </div>
+
+      <div class="continent-buttons" id="continent-buttons"></div>
+
+    </div>
+  </section>
+
+  <!-- ============ ESTUDIAR ============ -->
+  <section id="study" class="section">
+    <div class="study-controls">
+      <input type="text" id="search-input" placeholder="Buscar país o pista..." oninput="renderStudyGrid()">
+      <select id="continent-select" onchange="renderStudyGrid()">
+        <option value="Todos">Todos los continentes</option>
+      </select>
+    </div>
+
+    <div class="study-grid" id="study-grid"></div>
+  </section>
+
+</main>
+
+
+<script>
+
+  const curveChevrons = [
+    {
+      country: "Estados Unidos",
+      continent: "Norteamérica",
+      description: "Señal de advertencia en forma de rombo amarillo con una flecha negra curva (chevron). En curvas muy cerradas se colocan paneles rectangulares negros con chevrons amarillos en serie a lo largo de todo el giro.",
+      tags: ["rombo amarillo", "chevrons en serie"],
+image: "imagenes/usa.jpg"
+    },
+    {
+      country: "Canadá",
+      continent: "Norteamérica",
+      description: "Prácticamente idéntico al sistema estadounidense: rombo amarillo con flecha de curva negra, a veces acompañado de una placa con la velocidad recomendada en km/h.",
+      tags: ["rombo amarillo", "velocidad en km/h"],
+image: "imagenes/canada.jpg"
+    },
+    {
+      country: "México",
+      continent: "Norteamérica",
+      description: "Señal triangular de borde rojo y fondo blanco con el ícono de curva en negro, siguiendo el estándar de la Convención de Viena en vez del rombo típico estadounidense.",
+      tags: ["triángulo rojo", "ícono negro"],
+image: "imagenes/mexico.jpg"
+    },
+    {
+      country: "Brasil",
+      continent: "Sudamérica",
+      description: "Señal en forma de rombo ('losango') amarillo con flecha de curva en negro, similar en forma al sistema estadounidense pero adaptada al estándar vial brasileño.",
+      tags: ["losango amarillo", "flecha negra"],
+image: "imagenes/brazil.jpg"
+    },
+    {
+      country: "Argentina",
+      continent: "Sudamérica",
+      description: "En curvas pronunciadas se usan paneles chevron rectangulares de fondo blanco o amarillo con flecha negra, colocados en serie para marcar la trayectoria exacta de la curva.",
+      tags: ["paneles chevron", "serie en la curva"],
+image: "imagenes/argentina.jpg"
+    },
+    {
+      country: "Chile",
+      continent: "Sudamérica",
+      description: "Señal de curva en rombo amarillo con flecha negra, siguiendo un estándar similar al del resto de Sudamérica, influenciado por el sistema estadounidense de señalización.",
+      tags: ["rombo amarillo"],
+image: "imagenes/chile.jpg"
+    },
+    {
+      country: "Reino Unido",
+      continent: "Europa",
+      description: "Señal triangular de borde rojo con símbolo de curva en negro; en las curvas más cerradas se usan paneles rectangulares negros con chevrons amarillos muy vistosos, un elemento reconocible del paisaje vial británico.",
+      tags: ["triángulo rojo", "chevrons negro y amarillo"],
+image: "imagenes/reino.jpg"
+    },
+    {
+      country: "Francia",
+      continent: "Europa",
+      description: "Señal triangular roja estándar, pero en curvas pronunciadas destacan las 'balises de virage': paneles con rayas diagonales rojas y blancas que marcan la dirección del giro, muy distintivos.",
+      tags: ["rayas rojas y blancas", "balizas de virage"],
+image: "imagenes/francia.jpg"
+    },
+    {
+      country: "Alemania",
+      continent: "Europa",
+      description: "Señal triangular de borde rojo con ícono de curva en negro; en las curvas se instalan paneles blancos con chevrons negros reflejantes para guiar a los conductores de noche.",
+      tags: ["triángulo rojo", "chevron blanco y negro"],
+image: "imagenes/alemania.jpg"
+    },
+    {
+      country: "Países Bajos",
+      continent: "Europa",
+      description: "Señal triangular roja estándar según la Convención de Viena, con paneles de rayas rojas y blancas en las curvas cerradas, muy similares a los franceses.",
+      tags: ["triángulo rojo", "rayas rojas y blancas"],
+image: "imagenes/paisesbajos.jpg"
+    },
+    {
+      country: "Noruega",
+      continent: "Europa",
+      description: "Las señales de advertencia usan fondo en rombo amarillo (en vez del triángulo blanco típico europeo) con flecha de curva negra, un rasgo distintivo de los países nórdicos.",
+      tags: ["rombo amarillo", "estilo nórdico"],
+image: "imagenes/noruega.jpg"
+    },
+    {
+      country: "Polonia",
+      continent: "Europa",
+      description: "Señal triangular de borde rojo y fondo blanco, siguiendo el estándar clásico de Europa continental, con el ícono de curva en negro al centro.",
+      tags: ["triángulo rojo", "estándar europeo"],
+image: "imagenes/polonia.jpg"
+    },
+    {
+      country: "Japón",
+      continent: "Asia",
+      description: "Señal de advertencia en rombo amarillo con flecha de curva negra; en las curvas cerradas de montaña son muy comunes los paneles chevron negros sobre fondo amarillo.",
+      tags: ["rombo amarillo", "chevron en montaña"],
+image: "imagenes/japon.jpg"
+    },
+    {
+      country: "Corea del Sur",
+      continent: "Asia",
+      description: "Sistema similar al de Japón: rombo amarillo con ícono de curva en negro, usado como señal de advertencia estándar tanto en carreteras como en autopistas.",
+      tags: ["rombo amarillo"],
+image: "imagenes/surcorea.jpg"
+    },
+    {
+      country: "India",
+      continent: "Asia",
+      description: "Señal de curva en rombo o triángulo amarillo con flecha negra, frecuentemente acompañada de texto bilingüe (inglés e idioma local) debajo del ícono.",
+      tags: ["amarillo", "texto bilingüe"],
+image: "imagenes/india.jpg"
+    },
+    {
+      country: "Tailandia",
+      continent: "Asia",
+      description: "Señal de advertencia en rombo amarillo con flecha de curva negra, siguiendo el estándar asiático influenciado por el sistema estadounidense de señalización.",
+      tags: ["rombo amarillo"],
+image: "imagenes/thai.jpg"
+    },
+    {
+      country: "Sudáfrica",
+      continent: "África",
+      description: "Señal de advertencia en rombo amarillo con flecha negra de curva, un sistema compartido con varios países del sur de África influenciados por el estándar estadounidense.",
+      tags: ["rombo amarillo"],
+image: "imagenes/surafrica.jpg"
+    },
+    {
+      country: "Kenia",
+      continent: "África",
+      description: "Comparte el sistema de rombo amarillo con flecha de curva negra usado en gran parte de África oriental y austral, aunque en carreteras rurales los paneles suelen estar menos mantenidos.",
+      tags: ["rombo amarillo", "mantenimiento variable"],
+image: "imagenes/kenya.jpg"
+    },
+    {
+      country: "Australia",
+      continent: "Oceanía",
+      description: "Señal de advertencia en rombo amarillo con flecha curva negra; en curvas rurales muy cerradas son comunes los paneles chevron negros sobre amarillo colocados en serie.",
+      tags: ["rombo amarillo", "chevrons rurales"],
+image: "imagenes/australia.jpg"
+    },
+    {
+      country: "Nueva Zelanda",
+      continent: "Oceanía",
+      description: "Sistema muy similar al australiano: rombo amarillo con flecha de curva negra y paneles chevron colocados en serie en las curvas de montaña.",
+      tags: ["rombo amarillo", "curvas de montaña"],
+image: "imagenes/nuevazelanda.jpg"
+    }
+  ];
+
+  const continents = ["Todos", "Norteamérica", "Sudamérica", "Europa", "Asia", "África", "Oceanía"];
+
+  let currentQuizContinent = "Todos";
+  let currentCorrect = null;
+  let score = 0;
+  let total = 0;
+  let answered = false;
+
+  function normalize(str) {
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function showSection(section) {
+    document.getElementById("quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("study").classList.toggle("active", section === "study");
+    document.getElementById("btn-quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("btn-study").classList.toggle("active", section === "study");
+  }
+
+  function buildContinentButtons() {
+    const container = document.getElementById("continent-buttons");
+    container.innerHTML = "";
+    continents.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "continent-btn" + (c === currentQuizContinent ? " active" : "");
+      btn.textContent = c;
+      btn.onclick = () => selectQuizContinent(c);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectQuizContinent(continent) {
+    currentQuizContinent = continent;
+    document.querySelectorAll(".continent-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent === continent);
+    });
+    document.getElementById("quiz-continent-label").textContent =
+      continent === "Todos" ? "Mostrando: Todos los continentes" : "Mostrando: " + continent;
+    score = 0;
+    total = 0;
+    updateStats();
+    nextQuestion();
+  }
+
+  function getQuizPool() {
+    if (currentQuizContinent === "Todos") return curveChevrons;
+    const filtered = curveChevrons.filter(r => r.continent === currentQuizContinent);
+    return filtered.length >= 2 ? filtered : curveChevrons;
+  }
+
+  function nextQuestion() {
+    answered = false;
+    const pool = getQuizPool();
+    currentCorrect = pool[Math.floor(Math.random() * pool.length)];
+const imgBox = document.getElementById("quiz-image-container"); if (currentCorrect.image) { imgBox.innerHTML = '<img src="' + currentCorrect.image + '" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">'; } else { imgBox.innerHTML = '<div class="image-placeholder">Aquí va la imagen</div>'; }
+
+    let wrongPool = pool.filter(r => r.country !== currentCorrect.country);
+    if (wrongPool.length === 0) {
+      wrongPool = curveChevrons.filter(r => r.country !== currentCorrect.country);
+    }
+    const wrong = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+
+    const options = Math.random() < 0.5
+      ? [currentCorrect, wrong]
+      : [wrong, currentCorrect];
+
+    const container = document.getElementById("answer-buttons");
+    container.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = opt.country;
+      btn.onclick = () => checkAnswer(opt, btn);
+      container.appendChild(btn);
+    });
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("explanation").textContent = "";
+    document.getElementById("next-btn").disabled = true;
+  }
+
+  function checkAnswer(selected, btnEl) {
+    if (answered) return;
+    answered = true;
+    total++;
+
+    const buttons = document.querySelectorAll(".answer-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === currentCorrect.country) {
+        btn.classList.add("correct");
+      }
+    });
+
+    const resultEl = document.getElementById("result");
+    if (selected.country === currentCorrect.country) {
+      score++;
+      resultEl.textContent = "¡Correcto!";
+      resultEl.style.color = "var(--ok)";
+    } else {
+      btnEl.classList.add("incorrect");
+      resultEl.textContent = "Incorrecto. Era: " + currentCorrect.country;
+      resultEl.style.color = "var(--bad)";
+    }
+
+    document.getElementById("explanation").textContent = currentCorrect.description;
+    document.getElementById("next-btn").disabled = false;
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById("stats").textContent = "Aciertos: " + score + " / " + total;
+  }
+
+  function buildContinentSelect() {
+    const select = document.getElementById("continent-select");
+    continents.filter(c => c !== "Todos").forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderStudyGrid() {
+    const search = normalize(document.getElementById("search-input").value.trim());
+    const continent = document.getElementById("continent-select").value;
+
+    const filtered = curveChevrons.filter(r => {
+      const matchesContinent = continent === "Todos" || r.continent === continent;
+      const haystack = normalize(r.country + " " + r.description + " " + r.tags.join(" "));
+      const matchesSearch = search === "" || haystack.includes(search);
+      return matchesContinent && matchesSearch;
+    });
+
+    const grid = document.getElementById("study-grid");
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No se encontraron resultados.</div>';
+      return;
+    }
+
+    filtered.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "study-card";
+      card.innerHTML = `
+        <div class="study-image"> ${r.image ? '<img src="' + r.image + '" style="width:100%;height:100%;object-fit:contain;">' : '<div class="no-image">Aquí va la imagen</div>'} </div>
+   
+        <div class="study-content">
+          <h3>${r.country}</h3>
+          <div class="continent">${r.continent}</div>
+          <p>${r.description}</p>
+          <div class="tags">
+            ${r.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Init
+  buildContinentButtons();
+  buildContinentSelect();
+  nextQuestion();
+  renderStudyGrid();
+
+</script>
+
+</body>
+</html>

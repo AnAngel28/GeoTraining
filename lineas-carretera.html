@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛣️ GeoGuessr Líneas de Carretera</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #15171c;
+    --card: #24272f;
+    --line: #34383f;
+    --paint: #ffc93c;
+    --paint-dim: #8a7233;
+    --chalk: #f2efe6;
+    --muted: #9aa0ac;
+    --ok: #49b675;
+    --bad: #e2583a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,201,60,0.05) 46px 50px),
+      var(--asphalt);
+    color: var(--chalk);
+  }
+
+  header {
+    background: var(--card);
+    padding: 24px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: color .15s ease;
+  }
+  .back-link:hover { color: var(--paint); }
+
+  header h1 {
+    margin: 0 0 15px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .01em;
+  }
+
+  .mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mode-buttons button {
+    padding: 10px 25px;
+    border-radius: 999px;
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+
+  .mode-buttons button.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .mode-buttons button:hover {
+    border-color: var(--paint-dim);
+    color: var(--chalk);
+  }
+  .mode-buttons button.active:hover {
+    color: #1a1a1a;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 28px 16px 60px;
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+  }
+
+
+  /* =====================================================
+     QUIZ
+  ===================================================== */
+
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 25px;
+    align-items: start;
+  }
+
+  .quiz-container {
+    text-align: center;
+    min-width: 0;
+  }
+
+  .continent-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 48px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .continent-btn {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--chalk);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+
+  .continent-btn:hover {
+    border-color: var(--paint-dim);
+    transform: translateX(-2px);
+  }
+
+  .continent-btn.active {
+    background: var(--paint);
+    color: #1a1a1a;
+    border-color: var(--paint);
+  }
+
+  .quiz-continent-label {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+  .quiz-container h2 {
+    margin-top: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 750px;
+    height: 350px;
+    margin: 25px auto;
+    background: var(--chalk);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .image-placeholder {
+    color: #8a8d94;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: .02em;
+    border: 2px dashed #c9c6ba;
+    border-radius: 10px;
+    padding: 18px 26px;
+  }
+
+
+  /* =====================================================
+     BOTONES DE RESPUESTA
+  ===================================================== */
+
+  .answer-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+  }
+
+  .answer-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 55px;
+
+    padding: 14px 20px;
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    background: var(--card);
+    color: var(--chalk);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition:
+      background .15s ease,
+      border-color .15s ease,
+      transform .1s ease;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--paint-dim);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn:disabled {
+    cursor: default;
+  }
+
+  .answer-btn.correct {
+    background: rgba(73,182,117,0.18);
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .answer-btn.incorrect {
+    background: rgba(226,88,58,0.18);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+
+  /* =====================================================
+     RESULTADO
+  ===================================================== */
+
+  #result {
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 25px;
+  }
+
+  #explanation {
+    max-width: 750px;
+    margin: 14px auto;
+
+    padding: 16px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    line-height: 1.5;
+    font-size: 14.5px;
+
+    min-height: 20px;
+  }
+
+  .next-btn {
+    background: var(--paint);
+    color: #1a1a1a;
+
+    margin-top: 14px;
+
+    padding: 13px 25px;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .next-btn:hover {
+    background: #ffd766;
+  }
+
+  .next-btn:disabled {
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .stats {
+    margin-top: 20px;
+    font-family: 'Oswald', sans-serif;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+
+  /* =====================================================
+     ESTUDIAR
+  ===================================================== */
+
+  .study-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+  }
+
+  .study-controls input,
+  .study-controls select {
+    padding: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--line);
+
+    background: var(--card);
+
+    color: var(--chalk);
+    font-family: 'Inter', sans-serif;
+
+    font-size: 15px;
+  }
+
+  .study-controls input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .study-controls select {
+    min-width: 180px;
+  }
+
+
+  /* =====================================================
+     TARJETAS DE ESTUDIO
+  ===================================================== */
+
+  .study-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 20px;
+  }
+
+  .study-card {
+    background: var(--card);
+
+    border: 1px solid var(--line);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 150px;
+
+    background: var(--chalk);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+  }
+.study-image.multi { display: block; overflow-x: auto; scroll-snap-type: x mandatory; white-space: nowrap; -webkit-overflow-scrolling: touch; } .study-image.multi::-webkit-scrollbar { height: 6px; } .study-image.multi::-webkit-scrollbar-thumb { background: var(--paint-dim); border-radius: 999px; } .study-image.multi img { display: inline-block; width: 100%; height: 150px; object-fit: contain; scroll-snap-align: start; vertical-align: middle; }
+
+  .no-image {
+    color: #8a8d94;
+
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+
+    text-align: center;
+
+    padding: 16px;
+    border: 2px dashed #c9c6ba;
+    border-radius: 8px;
+  }
+
+  .study-content {
+    padding: 16px;
+  }
+
+  .study-content h3 {
+    margin: 0 0 5px;
+
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+  }
+
+  .continent {
+    color: var(--paint);
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+
+    margin-bottom: 10px;
+  }
+
+  .study-content p {
+    color: var(--muted);
+
+    line-height: 1.5;
+
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+
+  .tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--asphalt);
+    border: 1px solid var(--line);
+
+    color: var(--muted);
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    padding: 40px 0;
+  }
+
+
+  /* =====================================================
+     MÓVIL
+  ===================================================== */
+
+  @media (max-width: 600px) {
+
+    header h1 {
+      font-size: 21px;
+    }
+
+    main {
+      padding: 20px 14px 50px;
+    }
+
+    .quiz-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .continent-buttons {
+      order: -1;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 0;
+      position: static;
+      justify-content: center;
+    }
+
+    .continent-btn {
+      width: auto;
+      flex: 1 1 100px;
+    }
+
+    .image-container {
+      height: 230px;
+    }
+
+    .answer-buttons {
+      gap: 8px;
+    }
+
+    .answer-btn {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+
+    .study-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+
+
+<body>
+
+<header>
+  <a href="index.html" class="back-link">← Volver al Menú</a>
+  <h1>🛣️ Líneas de Carretera</h1>
+  <div class="mode-buttons">
+    <button id="btn-quiz" class="active" onclick="showSection('quiz')">Quiz</button>
+    <button id="btn-study" onclick="showSection('study')">Estudiar</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz" class="section active">
+    <div class="quiz-layout">
+
+      <div class="quiz-container">
+        <div class="quiz-continent-label" id="quiz-continent-label">Mostrando: Todos los continentes</div>
+        <h2>¿A qué país pertenece este patrón de líneas?</h2>
+
+        <div class="image-container" id="quiz-image-container">
+          <div class="image-placeholder">Aquí va la imagen</div>
+        </div>
+
+        <div class="answer-buttons" id="answer-buttons"></div>
+
+        <div id="result"></div>
+        <div id="explanation"></div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente →</button>
+
+        <div class="stats" id="stats">Aciertos: 0 / 0</div>
+      </div>
+
+      <div class="continent-buttons" id="continent-buttons"></div>
+
+    </div>
+  </section>
+
+  <!-- ============ ESTUDIAR ============ -->
+  <section id="study" class="section">
+    <div class="study-controls">
+      <input type="text" id="search-input" placeholder="Buscar país o pista..." oninput="renderStudyGrid()">
+      <select id="continent-select" onchange="renderStudyGrid()">
+        <option value="Todos">Todos los continentes</option>
+      </select>
+    </div>
+
+    <div class="study-grid" id="study-grid"></div>
+  </section>
+
+</main>
+
+
+<script>
+
+  const roadLines = [
+    {
+      country: "Estados Unidos",
+      continent: "Norteamérica",
+      description: "Línea central amarilla (doble y continua donde está prohibido rebasar), líneas de carril blancas discontinuas y línea de orilla blanca continua. Pavimento y pintura generalmente en muy buen estado.",
+      tags: ["amarillo central", "buen estado", "línea de orilla blanca"],
+      image: "imageneslineas/usa.png"
+    },
+    {
+      country: "Canadá",
+      continent: "Norteamérica",
+      description: "Sistema similar al de EE.UU.: línea central amarilla y líneas de carril/orilla blancas. En varias provincias se usan marcadores reflejantes clavados en el asfalto para las noches con nieve.",
+      tags: ["amarillo central", "marcadores reflejantes"],
+      image: "imageneslineas/canada.png"
+    },
+    {
+      country: "México",
+      continent: "Norteamérica",
+      description: "Línea central amarilla en teoría, pero en carreteras secundarias suele estar muy desgastada, descolorida o directamente ausente. El asfalto tiende a ser más irregular.",
+      tags: ["amarillo desgastado", "asfalto irregular"],
+      image: "imageneslineas/mexico.png"
+    },
+    {
+      country: "Panama",
+      continent: "Norteamérica",
+      description: "Panamá cuenta con un conjunto diverso de líneas viales, pero la combinación más común es una línea exterior sólida de color blanco con una línea interior de color amarillo. Sin embargo, estos no son exclusivos de Panamá. Dentro de América Latina, las líneas blancas exteriores sólidas sin línea media son casi exclusivas de Panamá.",
+      tags: ["amarillo desgastado", "asfalto irregular"],
+      image: "imageneslineas/panama.png"
+    },
+    {
+      country: "Republica Dominicana",
+      continent: "Norteamérica",
+      description: "Al igual que México, las carreteras guatemaltecas generalmente tienen líneas exteriores blancas sólidas con una única línea media amarilla. Las líneas viales en Guatemala son generalmente significativamente más delgadas que en México.",
+      tags: ["amarillo desgastado", "asfalto irregular"],
+      image: "imageneslineas/dominican.png"
+    },
+    {
+      country: "Guatemala",
+      continent: "Norteamérica",
+      description: "Las carreteras en República Dominicana suelen estar hechas de este asfalto liso, que tiene un color notablemente más oscuro que en otros países. ",
+      tags: ["amarillo desgastado", "asfalto irregular"],
+      image: "imageneslineas/guate.png"
+    },
+    {
+      country: "Brasil",
+      continent: "Sudamérica",
+      description: "Línea central amarilla y líneas de carril blancas, un sistema heredado de la influencia estadounidense. En carreteras federales suele estar bien mantenido.",
+      tags: ["amarillo central", "líneas de carril blancas"],
+      image: "imageneslineas/brazil.png"
+    },
+    {
+      country: "Argentina",
+      continent: "Sudamérica",
+      description: "Línea central amarilla (continua o discontinua según la zona) y líneas de orilla blancas. En rutas rurales la pintura suele estar muy desgastada por el sol.",
+      tags: ["amarillo", "desgaste por sol"],
+      image: "imageneslineas/argentina.png"
+    },
+    {
+      country: "Uruguay",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["blanco predominante", "doble amarilla en curvas"],
+      image: ["imageneslineas/uruguay.png", "imageneslineas/uruguay2.png"]
+    },
+    {
+      country: "Peru",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["blanco predominante", "doble amarilla en curvas"],
+      image: "imageneslineas/peru.png"
+    },
+    {
+      country: "Ecuador",
+      continent: "Sudamérica",
+      description: "Añadir descripcion",
+      tags: ["blanco predominante", "doble amarilla en curvas"],
+      image: "imageneslineas/ecuador.png"
+    },
+    {
+      country: "Chile",
+      continent: "Sudamérica",
+      description: "Predominan las líneas blancas tanto al centro como en los carriles, reservando la doble línea amarilla solo para tramos sin visibilidad donde se prohíbe el rebase.",
+      tags: ["blanco predominante", "doble amarilla en curvas"],
+      image: "imageneslineas/chile.png"
+    },
+    {
+      country: "Belgica",
+      continent: "Europa",
+      description: "Muchos caminos rurales en Bélgica están hechos de losas de hormigón, casi como los que se ven en Filipinas o Tailandia. Bélgica utiliza todas las líneas de carreteras blancas. Estos pueden ser continuos o rotos. Las carreteras suelen ir acompañadas de carriles bici a ambos lados.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/belgica.png", "imageneslineas/belgica2.png"]
+    },
+    {
+      country: "Estonia",
+      continent: "Europa",
+      description: "Las líneas de carreteras exteriores a veces constan de trazos cortos. Lituania a veces también tiene guiones cortos. Además, Suecia utiliza principalmente trazos cortos como líneas de carreteras exteriores.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/estonia.png"
+    },
+    {
+      country: "Alemania",
+      continent: "Europa",
+      description: "En la mayoría de las carreteras de Alemania encontrará una cantidad excesiva de bolardos. Aproximadamente cada 50 metros para ser exactos.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/alemania.png"
+    },
+    {
+      country: "Reino Unido",
+      continent: "Europa",
+      description: "Las líneas de carretera amarillas dobles se encuentran a menudo a los lados de las carreteras señalizadas, especialmente en las zonas urbanas. Estas líneas indican una zona sin paradas. Estas líneas también se pueden encontrar en Irlanda. Estas líneas intermedias, que consisten en largas rayas con ojos de gato (reflectores) en los espacios entre las rayas, son una buena pista para el Reino Unido.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/reino.png", "imageneslineas/reino2.png"]
+    },
+    {
+      country: "Turquia",
+      continent: "Europa",
+      description: "Muchas carreteras tienen pavimento con una textura granulada “sal y pimienta”. Las carreteras divididas son extremadamente comunes, especialmente en comparación con otros países mediterráneos.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/turquia.png", "imageneslineas/turquia2.png"]
+    },
+    {
+      country: "Suiza",
+      continent: "Europa",
+      description: "Las largas y discontinuas líneas de carreteras amarillas son una buena pista para Suiza. Estas líneas de carretera también son comunes en Liechtenstein. Los pasos de peatones suelen estar pintados de amarillo y son exclusivos de Suiza y Liechtenstein dentro de Europa.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/suiza2.png", "imageneslineas/suiza2.png"]
+    },
+    {
+      country: "Suecia",
+      continent: "Europa",
+      description: "En las carreteras más pequeñas, las líneas exteriores son blancas y discontinuas. Son claramente más cortas que las líneas discontinuas noruegas. A diferencia de Noruega y Finlandia, todas las líneas de carretera son blancas. Las líneas exteriores de las carreteras parecen sólidas desde la distancia, pero normalmente están divididas en pequeñas secciones con un patrón único, que es diferente de las líneas sólidas de Finlandia y Noruega. Las líneas de carreteras en Dinamarca pueden tener un patrón similar, sin embargo, las secciones individuales deben ser rectangulares.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/suecia.png", "imageneslineas/suecia2.png"]
+    },
+    {
+      country: "España",
+      continent: "Europa",
+      description: "Los caminos rurales a veces tienen líneas exteriores discontinuas. Esto puede ayudar a distinguir a España de Portugal e Italia, donde dichas líneas de carretera son (casi) inexistentes.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/spain.png"
+    },
+    {
+      country: "Eslovenia",
+      continent: "Europa",
+      description: "as carreteras eslovenas suelen presentar largas rayas exteriores. Los países vecinos no suelen utilizar líneas exteriores discontinuas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/eslovenia.png"
+    },
+    {
+      country: "Serbia",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/serbia.png"
+    },
+    {
+      country: "Rusia",
+      continent: "Europa",
+      description: "Además de contener una gran cantidad de bolardos, muchas intersecciones son inusualmente anchas en comparación con otros países.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/rusia.png"
+    },
+    {
+      country: "Rumania",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/romania.png", "imageneslineas/romania2.png"]
+    },
+    {
+      country: "Portugal",
+      continent: "Europa",
+      description: "Las carreteras adoquinadas son muy comunes en Portugal. Por lo general, estarán hechos de adoquines cuadrados dispuestos en diagonal en comparación con la dirección de la carretera.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/portu.png"
+    },
+    {
+      country: "Polonia",
+      continent: "Europa",
+      description: "Polonia tiene líneas de carreteras totalmente blancas. Las líneas medias dobles son muy comunes y suelen ser una buena pista para Polonia. Algunos otros países europeos, especialmente Dinamarca y Grecia, pueden tener líneas medias dobles.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/polonia.png"
+    },
+    {
+      country: "Noruega",
+      continent: "Europa",
+      description: "Las carreteras noruegas más pequeñas suelen tener líneas exteriores blancas largas y discontinuas, mientras que las carreteras más grandes tienen líneas exteriores sólidas y líneas medias amarillas. Las líneas amarillas tienen un tinte distintivo de color naranja. Las líneas de carreteras suelen estar formadas por pequeños puntos de pintura.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/noruega.png", "imageneslineas/noruega2.png"]
+    },
+    {
+      country: "Paises Bajos",
+      continent: "Europa",
+      description: "Como la mayor parte de Europa, los Países Bajos tienen líneas de carreteras totalmente blancas. Muchas carreteras se han salido de las líneas. A veces, puedes encontrar líneas medias verdes únicas. Muchas carreteras holandesas están flanqueadas por carriles bici. Existen diferentes diseños, pero uno muy común es un carril de color rosa rojizo.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/nethe.png", "imageneslineas/nethe2.png", "imageneslineas/nethe3.png"]
+    },
+    {
+      country: "Montenegro",
+      continent: "Europa",
+      description: "Añadir descripcion",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/monte.png"
+    },
+    {
+      country: "Luxemburgo",
+      continent: "Europa",
+      description: "Casi todo el paisaje de Luxemburgo está formado por verdes colinas, con un mosaico de agricultura y bosques.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/luxe.png"
+    },
+    {
+      country: "Italia",
+      continent: "Europa",
+      description: "Uno de los tipos más comunes de líneas de carreteras italianas son las líneas exteriores sólidas de color blanco sin línea media. Esto suele ser menos común en otros países mediterráneos.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/italia.png"
+    },
+    {
+      country: "Irlanda",
+      continent: "Europa",
+      description: "Es muy común ver rayas amarillas en el exterior de las carreteras irlandesas. Básicamente, esto nunca se encuentra en el Reino Unido. Estos guiones también se pueden ver en Nueva Zelanda.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/irland.png"
+    },
+    {
+      country: "Islandia",
+      continent: "Europa",
+      description: "Islandia tiene líneas de carreteras totalmente blancas. Las líneas externas, si están presentes, pueden ser líneas continuas o, más raramente, discontinuas. Islandia no tiene líneas de carreteras amarillas. Si ve líneas de carretera amarillas en un entorno nórdico, considere Noruega o Finlandia.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/iceland.png"
+    },
+    {
+      country: "Hungria",
+      continent: "Europa",
+      description: "Mientras que las líneas de carreteras húngaras son completamente blancas, las líneas en los carriles para bicicletas suelen ser amarillas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/hungria.png"
+    },
+    {
+      country: "Grecia",
+      continent: "Europa",
+      description: "En Grecia es común ver líneas medias dobles de color blanco sólido y ligeramente descoloridas. Esto se puede utilizar para distinguirlo de la mayoría de los demás países mediterráneos. Las líneas de carreteras amarillas son más comunes en Grecia que en cualquier otro país del sur de Europa.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/grecia.png", "imageneslineas/grecia2.png"]
+    },
+    {
+      country: "Francia",
+      continent: "Europa",
+      description: "Las carreteras típicas francesas tienen trazos largos y espaciados en el exterior. Estas líneas intermedias, en las que cada trazo consta de dos bloques desplazados, son exclusivas de Francia. No son extremadamente comunes, pero cuando los ves, puedes adivinar con seguridad Francia. Las líneas medias con guiones más largos de lo habitual pueden ser una buena pista para Francia.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/francia.png", "imageneslineas/francia2.png", "imageneslineas/francia3.png"]
+    },
+    {
+      country: "Finlandia",
+      continent: "Europa",
+      description: "Cuando estén presentes, las líneas viales exteriores siempre serán líneas blancas continuas. A diferencia de Suecia y Noruega, Finlandia no utiliza líneas exteriores discontinuas. La única excepción son las islas Åland, en el suroeste de Finlandia, que sí utilizan guiones. Finlandia tiene varios tipos diferentes de líneas de carreteras intermedias.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/finland.png", "imageneslineas/finland2.png"]
+    },
+    {
+      country: "Dinamarca",
+      continent: "Europa",
+      description: "Dinamarca tiene líneas de carreteras totalmente blancas. Las líneas medias dobles son muy comunes. Algunos otros países europeos, especialmente Polonia y Grecia, pueden tener líneas medias dobles. Las líneas de carreteras exteriores suelen estar formadas por pequeños cuadrados blancos. Estas líneas de aspecto único son una buena manera de identificar Dinamarca.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/dina.png", "imageneslineas/dina2.png"]
+    },
+    {
+      country: "Republica Checa",
+      continent: "Europa",
+      description: "Chequia suele tener carreteras exteriores sólidas, sin línea central. Si bien estas carreteras se pueden encontrar en todos los países vecinos, también son notablemente comunes en Alemania.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/chequia.png"
+    },
+    {
+      country: "Bulgaria",
+      continent: "Europa",
+      description: "Bulgaria suele tener carreteras estrechas. Esto es especialmente útil para diferenciar a Bulgaria de Rumania, donde las carreteras suelen ser mucho más gruesas. Bulgaria tiene en general carreteras de bastante mala calidad, con muchas pequeñas grietas y ocasionalmente baches.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/bulga.png", "imageneslineas/bulga2.png"]
+    },
+    {
+      country: "Japón",
+      continent: "Asia",
+      description: "Japón tiene tres variaciones comunes de líneas de carreteras. Son los siguientes: Las más comunes son líneas exteriores blancas y sólidas con una línea media blanca discontinua. Líneas laterales sólidas blancas con una línea media sólida amarilla. Líneas laterales sólidas blancas con líneas medias amarillas y blancas. Si bien es posible que encuentres otras combinaciones más raras, Japón nunca tendrá líneas amarillas fuera de las carreteras.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/japon.png"
+    },
+    {
+      country: "Sri Lanka",
+      continent: "Asia",
+      description: "Los caminos rurales suelen tener líneas exteriores, pero no líneas intermedias. A falta de otras pistas, esta puede ser a veces una forma de decidir un difícil 50-50. La mayoría de las carreteras pequeñas carecen por completo de líneas viales. Muchas partes de Sri Lanka tienen suelo rojizo. Con menos frecuencia, puede encontrarse con suelo blanco y arenoso.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/lanka.png", "imageneslineas/lanka2.png"]
+    },
+    {
+      country: "Taiwan",
+      continent: "Asia",
+      description: "Las carreteras en Taiwán generalmente presentan líneas medias amarillas dobles con líneas exteriores blancas simples. Las carreteras más delgadas a veces utilizan líneas amarillas discontinuas simples. Las líneas exteriores rojas que indican que no se puede estacionar son comunes en Taiwán, especialmente en las ciudades. Esto es esencialmente exclusivo del país.",
+      tags: ["sin línea central", "calles muy angostas."],
+      image: ["imageneslineas/taiwan.png", "imageneslineas/taiwan2.png", "imageneslineas/taiwan3.png"]
+    },
+    {
+      country: "Corea del Sur",
+      continent: "Asia",
+      description: "Las carreteras generalmente tienen líneas medias amarillas y líneas exteriores blancas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/corea.png"
+    },
+    {
+      country: "Singapore",
+      continent: "Asia",
+      description: "Singapur es una ciudad-estado altamente desarrollada, caracterizada por una limpieza y un orden generales. Las carreteras principales suelen estar divididas y suelen tener bordillos en blanco y negro y líneas exteriores dobles amarillas. A menudo verás altos bloques de apartamentos cerca.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/singa.png"
+    },
+    {
+      country: "Qatar",
+      continent: "Asia",
+      description: "Qatar suele utilizar líneas blancas exteriores sólidas con blanco o amarillo en el medio. Más raramente, también puedes encontrar líneas amarillas externas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/qatar.png"
+    },
+    {
+      country: "Filipinas",
+      continent: "Asia",
+      description: "Las carreteras de hormigón son extremadamente comunes en Filipinas. NOTA: Tailandia también tiene muchas carreteras de hormigón. Las líneas de carreteras intermedias en Filipinas pueden ser amarillas o blancas. En particular, a menudo verás líneas medias combinadas amarillas y blancas, lo que no es común en ningún otro país del este asiático. Las líneas de carretera amarillas suelen tener un distintivo tinte naranja.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/fili.png", "imageneslineas/fili2.png"]
+    },
+    {
+      country: "Oman",
+      continent: "Asia",
+      description: "Las carreteras de Omán utilizan líneas centrales exteriores amarillas y blancas. NOTA: Esto también es común en los Emiratos Árabes Unidos, Israel y Jordania, y ocasionalmente se encuentra en Qatar. Los bordillos negros y amarillos son comunes en Omán.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: ["imageneslineas/oman.png", "imageneslineas/oman2.png", "imageneslineas/oman3.png"]
+    },
+    {
+      country: "Nepal",
+      continent: "Asia",
+      description: "Nepal suele utilizar líneas viales exteriores amarillas, discontinuas o continuas, con líneas discontinuas blancas en el medio de carreteras más grandes. Los amarillos exteriores sólidos son muy comunes en la provincia oriental de Bagmati.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/nepal.png"
+    },
+    {
+      country: "Mongolia",
+      continent: "Asia",
+      description: "Mongolia normalmente puede identificarse por los biomas esteparios que se encuentran en todo el país. Si bien en Mongolia hay algunas zonas boscosas, la mayor parte del país presenta pastizales o desiertos vacíos con una característica falta de árboles. No es raro encontrar colinas escarpadas, rocosas o onduladas, así como ríos y lagos en toda Mongolia.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/mongo.png"
+    },
+    {
+      country: "Malaysia",
+      continent: "Asia",
+      description: "Malasia utiliza con frecuencia líneas centrales blancas dobles en sus carreteras de dos carriles. Es el único país del sudeste asiático que lo hace.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/malaysia.png"
+    },
+    {
+      country: "Kazajstan",
+      continent: "Asia",
+      description: "Kazajstán es un país grande y diverso, que presenta una gran cantidad de paisajes distintos como desiertos, estepas cubiertas de hierba, pasos de montaña y bosques de abedules. Lo más sorprendente es que la mayor parte de la cobertura rural de Kazajstán se encuentra en un paisaje muy vacío, abierto y mayoritariamente plano.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/kazakhstan.png"
+    },
+    {
+      country: "Indonesia",
+      continent: "Asia",
+      description: "Indonesia utiliza líneas centrales blancas o amarillas. Las líneas exteriores siempre serán blancas. Las líneas centrales serán continuas o discontinuas. En la cobertura de la Generación 3, las líneas centrales amarillas son más raras, ya que Indonesia recién comenzó a utilizar este color para sus líneas viales.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/indo.png"
+    },
+    {
+      country: "Cambodia",
+      continent: "Asia",
+      description: "Las carreteras tienen líneas intermedias discontinuas o de color amarillo fijo. Las líneas de carreteras exteriores son algo raras, pero cuando están presentes, son de color blanco sólido.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/cambodia.png"
+    },
+    {
+      country: "Emiratos Arabes Unidos",
+      continent: "Asia",
+      description: "Las líneas exteriores son amarillas, las líneas medias son blancas o amarillas. Otros países de Medio Oriente, como Jordania, Israel y Omán, también utilizan estas líneas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/eau.png"
+    },
+    {
+      country: "Vietnam",
+      continent: "Asia",
+      description: "Si bien en Vietnam se pueden encontrar varios tipos diferentes de líneas de carreteras, tanto blancas como amarillas, las rayas intermedias amarillas inusualmente cortas son particularmente comunes y distintas.",
+      tags: ["sin línea central", "calles muy angostas"],
+      image: "imageneslineas/vietnam.png"
+    },
+    {
+      country: "Tailandia",
+      continent: "Asia",
+      description: "Tailandia tiene líneas medias amarillas. Estas líneas medias son líneas continuas o discontinuas.",
+      tags: ["carril para motos", "borde de la vía"],
+      image: ["imageneslineas/thai.png", "imageneslineas/thai2.png"]
+    },
+    {
+      country: "Sudáfrica",
+      continent: "África",
+      description: "La marca más famosa de este meta: una línea amarilla continua delimita el acotamiento pavimentado, que se usa informalmente como un 'tercer carril' para dejar pasar a los vehículos más rápidos.",
+      tags: ["acotamiento amarillo", "tercer carril informal"]
+    },
+    {
+      country: "Kenia",
+      continent: "África",
+      description: "Sigue una práctica similar a Sudáfrica con línea amarilla marcando el acotamiento, aunque el estado del pavimento suele ser más irregular y con más baches.",
+      tags: ["acotamiento amarillo", "pavimento irregular"]
+    },
+    {
+      country: "Namibia",
+      continent: "África",
+      description: "Comparte con Sudáfrica la línea amarilla en el acotamiento en las rutas principales pavimentadas, pero muchos tramos del país son de grava y no tienen ninguna línea pintada.",
+      tags: ["acotamiento amarillo", "tramos de grava sin líneas"]
+    },
+    {
+      country: "Australia",
+      continent: "Oceanía",
+      description: "Australia utiliza líneas de carreteras casi exclusivamente blancas, con unas pocas excepciones raras en regiones alpinas como el monte Kosciuszko y el monte Hotham. Las líneas exteriores en Australia a veces presentan franjas retumbantes que parecen pequeñas franjas blancas perpendiculares a la línea de la carretera..",
+      tags: ["Botts' dots", "marcadores elevados"],
+      image: ["imageneslineas/australia.png", "imageneslineas/australia2.png"]
+    },
+    {
+      country: "Nueva Zelanda",
+      continent: "Oceanía",
+      description: "Nueva Zelanda normalmente utiliza líneas de carreteras exteriores blancas. En las zonas pobladas se pueden ver líneas de carreteras exteriores con rayas amarillas. En carreteras más pequeñas se pueden ver carreteras sin líneas exteriores. Las líneas internas son una sola línea blanca discontinua o líneas amarillas dobles ininterrumpidas.",
+      tags: ["doble amarilla", "carreteras de montaña"],
+      image: "imageneslineas/newzeland.png"
+    }
+  ];
+
+  const continents = ["Todos", "Norteamérica", "Sudamérica", "Europa", "Asia", "África", "Oceanía"];
+
+  let currentQuizContinent = "Todos";
+  let currentCorrect = null;
+  let score = 0;
+  let total = 0;
+  let answered = false;
+
+  function normalize(str) {
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function showSection(section) {
+    document.getElementById("quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("study").classList.toggle("active", section === "study");
+    document.getElementById("btn-quiz").classList.toggle("active", section === "quiz");
+    document.getElementById("btn-study").classList.toggle("active", section === "study");
+  }
+
+  function buildContinentButtons() {
+    const container = document.getElementById("continent-buttons");
+    container.innerHTML = "";
+    continents.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "continent-btn" + (c === currentQuizContinent ? " active" : "");
+      btn.textContent = c;
+      btn.onclick = () => selectQuizContinent(c);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectQuizContinent(continent) {
+    currentQuizContinent = continent;
+    document.querySelectorAll(".continent-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent === continent);
+    });
+    document.getElementById("quiz-continent-label").textContent =
+      continent === "Todos" ? "Mostrando: Todos los continentes" : "Mostrando: " + continent;
+    score = 0;
+    total = 0;
+    updateStats();
+    nextQuestion();
+  }
+
+  function getQuizPool() {
+    if (currentQuizContinent === "Todos") return roadLines;
+    const filtered = roadLines.filter(r => r.continent === currentQuizContinent);
+    return filtered.length >= 2 ? filtered : roadLines;
+  }
+
+  function nextQuestion() {
+    answered = false;
+    const pool = getQuizPool();
+    currentCorrect = pool[Math.floor(Math.random() * pool.length)];
+
+function pickImage(item) { if (!item.image) return null; if (Array.isArray(item.image)) { return item.image[Math.floor(Math.random() * item.image.length)]; } return item.image; } const imgBox = document.getElementById("quiz-image-container"); const chosenImage = pickImage(currentCorrect); if (chosenImage) { 
+      imgBox.innerHTML = '<img src="' + chosenImage + '" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;">';
+    } else {
+      imgBox.innerHTML = '<div class="image-placeholder">Aquí va la imagen</div>';
+    }
+
+    let wrongPool = pool.filter(r => r.country !== currentCorrect.country);
+    if (wrongPool.length === 0) {
+      wrongPool = roadLines.filter(r => r.country !== currentCorrect.country);
+    }
+    const wrong = wrongPool[Math.floor(Math.random() * wrongPool.length)];
+
+    const options = Math.random() < 0.5
+      ? [currentCorrect, wrong]
+      : [wrong, currentCorrect];
+
+    const container = document.getElementById("answer-buttons");
+    container.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = opt.country;
+      btn.onclick = () => checkAnswer(opt, btn);
+      container.appendChild(btn);
+    });
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("explanation").textContent = "";
+    document.getElementById("next-btn").disabled = true;
+  }
+
+  function checkAnswer(selected, btnEl) {
+    if (answered) return;
+    answered = true;
+    total++;
+
+    const buttons = document.querySelectorAll(".answer-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === currentCorrect.country) {
+        btn.classList.add("correct");
+      }
+    });
+
+    const resultEl = document.getElementById("result");
+    if (selected.country === currentCorrect.country) {
+      score++;
+      resultEl.textContent = "¡Correcto!";
+      resultEl.style.color = "var(--ok)";
+    } else {
+      btnEl.classList.add("incorrect");
+      resultEl.textContent = "Incorrecto. Era: " + currentCorrect.country;
+      resultEl.style.color = "var(--bad)";
+    }
+
+    document.getElementById("explanation").textContent = currentCorrect.description;
+    document.getElementById("next-btn").disabled = false;
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById("stats").textContent = "Aciertos: " + score + " / " + total;
+  }
+
+  function buildContinentSelect() {
+    const select = document.getElementById("continent-select");
+    continents.filter(c => c !== "Todos").forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+
+  function renderStudyGrid() {
+    const search = normalize(document.getElementById("search-input").value.trim());
+    const continent = document.getElementById("continent-select").value;
+
+    const filtered = roadLines.filter(r => {
+      const matchesContinent = continent === "Todos" || r.continent === continent;
+      const haystack = normalize(r.country + " " + r.description + " " + r.tags.join(" "));
+      const matchesSearch = search === "" || haystack.includes(search);
+      return matchesContinent && matchesSearch;
+    });
+
+    const grid = document.getElementById("study-grid");
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No se encontraron resultados.</div>';
+      return;
+    }
+
+filtered.forEach(r => { const card = document.createElement("div"); card.className = "study-card"; const images = Array.isArray(r.image) ? r.image : (r.image ? [r.image] : []); let imageHtml; if (images.length === 0) { imageHtml = '<div class="study-image"><div class="no-image">Aquí va la imagen</div></div>'; } else if (images.length === 1) { imageHtml = `<div class="study-image"><img src="${images[0]}" style="width:100%;height:100%;object-fit:contain;"></div>`; } else { imageHtml = `<div class="study-image multi">${images.map(src => `<img src="${src}">`).join("")}</div>`; } card.innerHTML = ` ${imageHtml} <div class="study-content"> <h3>${r.country}</h3> <div class="continent">${r.continent}</div> <p>${r.description}</p> <div class="tags"> ${r.tags.map(t => `<span class="tag">${t}</span>`).join("")} </div> </div> `; grid.appendChild(card); });
+  }
+
+  // Init
+  buildContinentButtons();
+  buildContinentSelect();
+  nextQuestion();
+  renderStudyGrid();
+
+</script>
+
+</body>
+</html>
