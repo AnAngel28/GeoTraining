@@ -227,11 +227,42 @@
     line-height:1.35;
   }
 
-  .arrow{
+  /* Contador de entradas por página (reemplaza la flecha); los colores vienen de la bandera/temática */
+  .count{
+    --c1:#1A5FAD; --c2:#8fb8e8; --c3:#1A5FAD;
     flex:0 0 auto;
-    color:var(--muted);
-    font-size:18px;
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:4px 10px;
+    border-radius:99px;
+    background:#1a1c22;
+    border:1px solid var(--line);
+    box-shadow:inset 0 -2px 0 var(--c1);
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    letter-spacing:.02em;
+    color:var(--chalk);
+    line-height:1;
+    min-width:44px;
+    justify-content:flex-start;
   }
+  .count.loading .cnum{opacity:.45}
+
+  .site-count{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:18px;
+  }
+  .site-count .count{
+    padding:6px 12px 6px 8px;
+    font-size:13px;
+    gap:8px;
+  }
+  .site-count .count svg{width:14px; height:18px; flex:0 0 auto;}
+  .site-count .count .lbl{color:var(--muted); font-weight:500; text-transform:uppercase; font-size:11px; letter-spacing:.06em;}
 
   footer{
     margin-top:36px;
@@ -707,8 +738,6 @@
       <div class="text">
         <p class="title">Escudos de carretera</p>
         <p class="desc">Numeración de rutas por país</p>
-<p class="title">En construccion</p>
-
       </div>
       <div class="arrow">→</div>
     </a>
@@ -769,7 +798,7 @@
       <div class="text">
         <p class="title">Coches Street View</p>
         <p class="desc">Cobertura y cámaras de Street View por país</p>
-<p class="title">En Construccion</p>
+<p class="desc">En Construccion</p>
 
       </div>
       <div class="arrow">→</div>
@@ -784,7 +813,7 @@
       </div>
       <div class="text">
         <p class="title">Señales de tránsito</p>
-        <p class="desc">Estilos de señalización vial por país parte trasera</p>
+        <p class="desc">Estilos de señalización vial por país</p>
       </div>
       <div class="arrow">→</div>
     </a>
@@ -1189,6 +1218,128 @@
   </div>
 
   <footer>Entrenadores de meta para practicar GeoGuessr.</footer>
+
+  <div class="site-count">
+    <div class="count loading" id="siteCount" title="Visitas a esta página principal">
+      <svg viewBox="0 0 24 32" fill="none" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" fill="#1A5FAD"/><circle cx="12" cy="12" r="5" fill="#f2efe6"/></svg>
+      <span class="lbl">Visitas</span>
+      <span class="cnum">…</span>
+    </div>
+  </div>
 </div>
+
+<script>
+(function(){
+  var API='https://abacus.jasoncameron.dev';
+  var NS='geotrainer-index5-k7q2x9';       // espacio propio de tus contadores
+  var CK='gt_counts_v1', CACHE_MS=120000;
+
+  // Colores por bandera [c1,c2,c3] -> se usan como "mini bandera" del contador
+  var FLAGS={
+    br:['#009B3A','#FFDF00','#002776'], mx:['#006847','#ffffff','#CE1126'], es:['#AA151B','#F1BF00','#AA151B'],
+    za:['#DE3831','#007A4D','#002395'], co:['#FCD116','#003893','#CE1126'], nz:['#00247D','#CC142B','#ffffff'],
+    au:['#00247D','#ffffff','#CF142B'], us:['#B22234','#ffffff','#3C3B6E'], fr:['#002395','#ffffff','#ED2939'],
+    ar:['#75AADB','#ffffff','#F6B40E'], gb:['#012169','#ffffff','#C8102E'], jp:['#ffffff','#BC002D','#ffffff'],
+    'in':['#FF9933','#ffffff','#138808'], de:['#000000','#DD0000','#FFCE00'], pl:['#ffffff','#DC143C','#ffffff'],
+    th:['#A51931','#ffffff','#2D2A4A'], kr:['#ffffff','#cd2e3a','#0047a0'], id:['#E70011','#ffffff','#E70011'],
+    ph:['#0038A8','#FCD116','#CE1126'], ke:['#000000','#BB0000','#006600'], tr:['#E30A17','#ffffff','#E30A17'],
+    se:['#006AA7','#FECC00','#006AA7'], om:['#CE1126','#ffffff','#008000'], pe:['#D91023','#ffffff','#D91023'],
+    cl:['#0039A6','#ffffff','#D52B1E'], ec:['#FFD100','#034EA2','#CE1126']
+  };
+  // Temática de las páginas de "Señales" (sin bandera)
+  var THEMES={
+    'dominios':['#1A5FAD','#8fb8e8','#1A5FAD'],
+    'senales-peatonales':['#FFC93C','#1a1c22','#FFC93C'],
+    'bolardos':['#f2efe6','#c8102e','#f2efe6'],
+    'postes-luz':['#FFC93C','#8a8f98','#FFC93C'],
+    'escudos-carretera':['#1A5FAD','#f2efe6','#1A5FAD'],
+    'placas3':['#f2efe6','#1A5FAD','#f2efe6'],
+    'lineas-carretera':['#FFC93C','#f2efe6','#FFC93C'],
+    'chevrons-curva2':['#FFC93C','#1a1c22','#FFC93C'],
+    'coches-streetview':['#4285F4','#FBBC05','#EA4335'],
+    'senales-transito':['#FFC93C','#f2efe6','#c8102e'],
+    'senal-alto':['#c8102e','#f2efe6','#c8102e']
+  };
+
+  function keyOf(href){
+    return decodeURIComponent(href).replace(/\.html?$/i,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^A-Za-z0-9_-]+/g,'-').toLowerCase().slice(0,60);
+  }
+  function fmt(n){return (typeof n==='number')?n.toLocaleString('es'):'–';}
+  function get(key){
+    return fetch(API+'/get/'+NS+'/'+key).then(function(r){
+      if(r.status===404) return 0;
+      if(!r.ok) throw new Error(r.status);
+      return r.json().then(function(j){return j.value||0;});
+    });
+  }
+  function ss(k,v){try{ if(v===undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k,v);}catch(e){}}
+
+  // ---- cache corto para no pedir ~45 contadores en cada recarga
+  function loadCache(){try{var c=JSON.parse(localStorage.getItem(CK)||'null');return c&&c.d?c:null;}catch(e){return null;}}
+  function saveCache(d){try{localStorage.setItem(CK,JSON.stringify({t:Date.now(),d:d}));}catch(e){}}
+
+  var items=[].slice.call(document.querySelectorAll('a.item'));
+  var byKey={};
+  items.forEach(function(a){
+    var key=keyOf(a.getAttribute('href')||''); if(!key) return;
+    a.dataset.ckey=key;
+    var old=a.querySelector('.arrow'); if(old) old.remove();
+    var u=a.querySelector('use'), fid=u?(u.getAttribute('href')||'').replace('#flag-',''):'';
+    var th=FLAGS[fid]||THEMES[key]||null;
+    var box=document.createElement('div'); box.className='count loading'; box.title='Veces que se ha entrado a este quiz';
+    if(th){box.style.setProperty('--c1',th[0]);box.style.setProperty('--c2',th[1]);box.style.setProperty('--c3',th[2]);}
+    box.innerHTML='<span class="cnum">…</span>';
+    a.appendChild(box);
+    (byKey[key]=byKey[key]||[]).push(box);
+  });
+
+  var data={}; var cache=loadCache(); if(cache) data=cache.d;
+  function paint(key){
+    (byKey[key]||[]).forEach(function(b){
+      b.classList.remove('loading');
+      b.querySelector('.cnum').textContent=(key in data)?fmt(data[key]):'–';
+    });
+  }
+  var keys=Object.keys(byKey);
+  if(cache) keys.forEach(paint);
+  if(!cache||Date.now()-cache.t>CACHE_MS){
+    var queue=keys.slice(), workers=6;
+    (function run(){
+      if(!queue.length) return;
+      var k=queue.shift();
+      get(k).then(function(v){data[k]=v;paint(k);},function(){paint(k);}).then(function(){
+        if(!queue.length){saveCache(data);} run();
+      });
+    })();
+    for(var i=1;i<workers;i++){(function run(){
+      if(!queue.length) return;
+      var k=queue.shift();
+      get(k).then(function(v){data[k]=v;paint(k);},function(){paint(k);}).then(function(){
+        if(!queue.length){saveCache(data);} run();
+      });
+    })();}
+  }
+
+  // ---- cuenta cada vez que se entra a un quiz desde el menú
+  function hit(a){
+    var key=a.dataset.ckey; if(!key) return;
+    try{fetch(API+'/hit/'+NS+'/'+key,{keepalive:true}).catch(function(){});}catch(e){}
+    if(typeof data[key]==='number'){data[key]++; paint(key); saveCache(data);}
+  }
+  document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a.item'); if(a) hit(a);});
+  document.addEventListener('auxclick',function(e){if(e.button!==1) return; var a=e.target.closest&&e.target.closest('a.item'); if(a) hit(a);});
+
+  // ---- visitas generales (1 por sesión del navegador para que recargar no infle el número)
+  var site=document.getElementById('siteCount'), num=site.querySelector('.cnum');
+  var first=!ss('gt_visited'); ss('gt_visited','1');
+  fetch(API+(first?'/hit/':'/get/')+NS+'/visitas-total').then(function(r){
+    if(r.status===404) return {value:0};
+    if(!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(function(j){site.classList.remove('loading'); num.textContent=fmt(j.value||0);})
+    .catch(function(){site.classList.remove('loading'); num.textContent='–';});
+})();
+</script>
 </body>
 </html>
