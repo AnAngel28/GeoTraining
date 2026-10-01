@@ -1303,23 +1303,37 @@
   }
   var keys=Object.keys(byKey);
   if(cache) keys.forEach(paint);
-  if(!cache||Date.now()-cache.t>CACHE_MS){
-    var queue=keys.slice(), workers=6;
-    (function run(){
-      if(!queue.length) return;
-      var k=queue.shift();
-      get(k).then(function(v){data[k]=v;paint(k);},function(){paint(k);}).then(function(){
-        if(!queue.length){saveCache(data);} run();
-      });
-    })();
-    for(var i=1;i<workers;i++){(function run(){
-      if(!queue.length) return;
-      var k=queue.shift();
-      get(k).then(function(v){data[k]=v;paint(k);},function(){paint(k);}).then(function(){
-        if(!queue.length){saveCache(data);} run();
-      });
-    })();}
+
+  // pide un contador; si el servicio responde con límite de velocidad o error, reintenta con espera
+  function getRetry(key,left){
+    return get(key).catch(function(err){
+      if(left<=0) throw err;
+      var wait=900*(4-left+1)+Math.random()*500;
+      return new Promise(function(r){setTimeout(r,wait);}).then(function(){return getRetry(key,left-1);});
+    });
   }
+  // pocas peticiones a la vez y espaciadas, para no activar el límite del servicio
+  function loadKeys(list,done){
+    var queue=list.slice(), active=0, MAX=3;
+    function next(){
+      if(!queue.length){ if(!active&&done) done(); return; }
+      if(active>=MAX) return;
+      var k=queue.shift(); active++;
+      getRetry(k,3).then(function(v){data[k]=v;},function(){}).then(function(){
+        paint(k); active--; saveCache(data);
+        setTimeout(next,120);
+      });
+      setTimeout(next,150);
+    }
+    next();
+  }
+  var stale=!cache||Date.now()-cache.t>CACHE_MS;
+  var todo=stale?keys:keys.filter(function(k){return !(k in data);});
+  function pending(){return keys.filter(function(k){return !(k in data);});}
+  loadKeys(todo,function(){
+    // segunda pasada para los que hayan quedado sin responder
+    var m=pending(); if(m.length) setTimeout(function(){loadKeys(m,function(){pending().forEach(paint);});},6000);
+  });
 
   // ---- cuenta cada vez que se entra a un quiz desde el menú
   function hit(a){
@@ -1333,11 +1347,20 @@
   // ---- visitas generales (1 por sesión del navegador para que recargar no infle el número)
   var site=document.getElementById('siteCount'), num=site.querySelector('.cnum');
   var first=!ss('gt_visited'); ss('gt_visited','1');
-  fetch(API+(first?'/hit/':'/get/')+NS+'/visitas-total').then(function(r){
-    if(r.status===404) return {value:0};
-    if(!r.ok) throw new Error(r.status);
-    return r.json();
-  }).then(function(j){site.classList.remove('loading'); num.textContent=fmt(j.value||0);})
+  function siteReq(left){
+    return fetch(API+(first?'/hit/':'/get/')+NS+'/visitas-total').then(function(r){
+      if(r.status===404) return {value:0};
+      if(!r.ok) throw new Error(r.status);
+      return r.json();
+    }).catch(function(err){
+      if(left<=0) throw err;
+      return new Promise(function(r){setTimeout(r,1200);}).then(function(){
+        first=false; // si el primer intento llegó a contar, no volver a sumar
+        return siteReq(left-1);
+      });
+    });
+  }
+  siteReq(2).then(function(j){site.classList.remove('loading'); num.textContent=fmt(j.value||0);})
     .catch(function(){site.classList.remove('loading'); num.textContent='–';});
 })();
 </script>
