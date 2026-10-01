@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿En qué país se habla? · Quiz estilo GeoGuessr</title>
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg1:#000;--bg2:#1c1c1c;--ink:#f5f5f5;--mut:#b3b3b3;--glass:rgba(255,255,255,.07);--edge:rgba(255,255,255,.18);--pri:#ffffff;--pri2:#b5b5b5;--acc:#e8e8e8;--ok:#12b886;--bad:#ff4d6d;--opt:rgba(255,255,255,.07);--glow:rgba(255,255,255,.14);
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans',sans-serif;
+  background:radial-gradient(900px 500px at 12% -10%,rgba(255,255,255,.22),transparent 60%),radial-gradient(800px 600px at 100% 15%,rgba(255,255,255,.12),transparent 60%),radial-gradient(700px 500px at 50% 115%,rgba(255,255,255,.16),transparent 60%),linear-gradient(160deg,var(--bg1),var(--bg2));background-color:#000;background-attachment:fixed}
+.bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bg span{position:absolute;bottom:-60px;font-weight:800;opacity:.10;animation:rise linear infinite;color:var(--ink)}
+@keyframes rise{to{transform:translateY(-115vh) rotate(25deg)}}
+header,main,footer{position:relative;z-index:1}
+header{padding:26px 18px 6px;text-align:center}
+.globe{font-size:58px;display:inline-block;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 8px 14px var(--glow))}
+@keyframes float{50%{transform:translateY(-8px) rotate(8deg)}}
+header h1{margin:4px 0 4px;font-size:clamp(28px,7vw,42px);line-height:1.05;font-weight:900;letter-spacing:-.02em;
+  background:linear-gradient(90deg,var(--pri),var(--acc),var(--pri2));-webkit-background-clip:text;background-clip:text;color:transparent}
+header small{display:block;font-size:13.5px;color:var(--mut)}
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.pills b{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(8px)}
+main{max-width:740px;margin:0 auto;padding:16px}
+.card{background:var(--glass);border:1px solid var(--edge);border-radius:26px;padding:24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 50px -20px var(--glow),0 2px 0 rgba(255,255,255,.12) inset;animation:pop .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.97)}}
+h2{margin:0 0 6px;font-size:26px;font-weight:900}
+p{line-height:1.55}
+.flags{display:flex;gap:6px;overflow:hidden;font-size:30px;margin:12px 0;white-space:nowrap;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.flags div{display:flex;gap:12px;animation:slide 28s linear infinite}
+@keyframes slide{to{transform:translateX(-50%)}}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0}
+.mode{font:inherit;text-align:left;padding:14px;border-radius:18px;border:2px solid var(--edge);background:var(--opt);color:var(--ink);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.mode:hover{transform:translateY(-3px);border-color:#fff}
+.mode.on{border-color:transparent;background:linear-gradient(135deg,#ffffff,#c9c9c9);color:#0a0a0a;box-shadow:0 10px 24px -8px rgba(255,255,255,.25)}
+.mode b{display:block;font-size:16px}.mode span{font-size:12.5px;opacity:.8}
+.btn{font:inherit;font-weight:800;border:none;border-radius:16px;padding:14px 24px;cursor:pointer;font-size:16px;color:#0a0a0a;background:linear-gradient(135deg,#ffffff,#c9c9c9);box-shadow:0 10px 24px -8px rgba(255,255,255,.25);transition:transform .15s,filter .15s}
+.btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.08)}
+.btn.sec{background:var(--opt);color:var(--ink);border:2px solid var(--edge);box-shadow:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stats{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stats span{font-size:13px;font-weight:800;padding:6px 13px;border-radius:99px;background:var(--opt);border:1px solid var(--edge)}
+.bar{height:12px;background:var(--opt);border:1px solid var(--edge);border-radius:99px;margin:0 6px 20px}
+.bar div{height:100%;width:0;position:relative;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--pri),var(--pri2));transition:width .4s cubic-bezier(.2,1.2,.4,1)}
+.bar div::after{content:'📍';position:absolute;right:-11px;top:-15px;font-size:20px}
+.prompt{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);margin:0 0 10px;text-align:center}
+.sample{position:relative;font-size:clamp(22px,5.6vw,34px);font-weight:800;line-height:1.35;text-align:center;margin:0 0 20px;padding:34px 22px;border-radius:22px;word-break:break-word;
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.04));border:2px solid var(--edge);animation:pop .4s}
+.sample::before,.sample::after{position:absolute;font-size:64px;line-height:1;color:var(--pri);opacity:.45;font-family:Georgia,serif}
+.sample::before{content:'\201C';left:12px;top:6px}.sample::after{content:'\201D';right:12px;bottom:-14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;counter-reset:o}
+.opt{counter-increment:o;display:flex;align-items:center;gap:12px;font:inherit;font-size:17px;font-weight:800;text-align:left;padding:14px;border-radius:18px;border:2px solid var(--edge);background:var(--opt);color:var(--ink);cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.opt::before{content:counter(o,upper-alpha);flex:0 0 34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;color:#0a0a0a;background:linear-gradient(135deg,#ffffff,#bdbdbd)}
+.opt:hover:not(:disabled){transform:translateY(-3px);border-color:#fff;background:rgba(255,255,255,.14);box-shadow:0 12px 24px -12px rgba(255,255,255,.25)}
+.opt.ok{background:linear-gradient(135deg,#12b886,#38d9a9);border-color:transparent;color:#fff;animation:bump .5s}
+.opt.bad{background:linear-gradient(135deg,#ff4d6d,#ff8787);border-color:transparent;color:#fff;animation:shake .45s}
+.opt.ok::before,.opt.bad::before{background:rgba(255,255,255,.3);color:#fff}
+.opt:disabled{cursor:default}
+@keyframes bump{40%{transform:scale(1.05)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.reveal{margin-top:18px;padding:16px 18px;border-radius:18px;background:var(--opt);border:1px solid var(--edge);border-left:6px solid var(--acc);display:none}
+.reveal.show{display:block;animation:pop .4s}
+.reveal .v{font-weight:900;font-size:18px;margin-bottom:6px}.reveal .c{font-size:16px;margin-bottom:6px;line-height:1.6}.reveal .f{font-size:15.5px;color:var(--mut)}
+.reveal .x{display:grid;gap:8px;margin-top:12px}.reveal .x div{font-size:14px;line-height:1.5;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--edge)}.reveal .x b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--pri);margin-bottom:2px}
+.fl{height:16px;width:auto;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.55);vertical-align:-3px;margin:0 3px 0 1px}
+.flags .fl{height:38px;margin:0;border-radius:5px;box-shadow:0 3px 10px rgba(0,0,0,.6);flex:0 0 auto}
+.sample.is-sign{padding:30px 14px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
+.sample.is-sign::before,.sample.is-sign::after{content:none}
+.sign{display:inline-block;max-width:100%;padding:18px 34px;border-radius:12px;border:4px solid #fff;color:#fff;font-weight:800;font-size:clamp(24px,6.5vw,42px);line-height:1.2;box-shadow:0 0 0 3px rgba(0,0,0,.35),0 14px 30px -10px rgba(0,0,0,.8),inset 0 0 0 3px rgba(255,255,255,.18)}
+.sign.road{background:#0a6b3c}.sign.shop{background:#0f4c9c}
+.sign.stop{background:#c8102e;border:none;padding:46px 54px;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);box-shadow:none;text-shadow:0 2px 4px rgba(0,0,0,.4)}
+.hidden{display:none}
+.list{max-height:320px;overflow-y:auto;border:1px solid var(--edge);border-radius:16px;margin-top:12px;background:var(--opt)}
+.list div{padding:10px 14px;border-bottom:1px solid var(--edge);font-size:14px}.list div:last-child{border:none}
+.list b{margin-right:8px;color:var(--pri)}
+.big{font-size:68px;font-weight:900;line-height:1.1;margin:6px 0;background:linear-gradient(90deg,var(--acc),var(--pri),var(--pri2));-webkit-background-clip:text;background-clip:text;color:transparent}
+footer{text-align:center;font-size:12px;color:var(--mut);padding:8px 16px 28px}
+.spark{position:fixed;z-index:9;pointer-events:none;font-size:22px}
+@media (max-width:480px){.opts{grid-template-columns:1fr}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+<header>
+  <div class="globe">🌍</div>
+  <h1>¿En qué país se habla?</h1>
+  <small>Entrená el ojo para Street View · estilo GeoGuessr</small>
+  <div class="pills"><b id="nLang">🗣️ idiomas</b><b>📍 Países con Street View</b><b>🔥 Rachas</b></div>
+</header>
+<main>
+  <section id="start" class="card">
+    <h2>Adiviná el país</h2>
+    <div class="flags"><div id="flagTrack"></div></div>
+    <p>Vas a ver una frase corta o un cartel. Elegí en qué <b>país</b> se habla ese idioma. Si un idioma se habla en varios países (inglés, español, francés…), cada país es una pregunta distinta, así los aprendés todos por igual. En <b>Estudiar</b> verás cada idioma junto con todos sus países.</p>
+    <p class="prompt" style="text-align:left;margin:14px 0 0">Tipo de pregunta</p>
+    <div class="modes" id="types"></div>
+    <p class="prompt" style="text-align:left;margin:0">Cantidad</p>
+    <div class="modes" id="modes"></div>
+    <div class="row"><button class="btn" id="go">▶ Empezar</button><button class="btn sec" id="showAll">📖 Estudiar idiomas y países</button></div>
+    <div id="all" class="list hidden"></div>
+    <p class="f" style="font-size:13px;color:var(--mut)" id="best"></p>
+  </section>
+
+  <section id="game" class="card hidden">
+    <div class="stats"><span id="sProg"></span><span id="sScore"></span><span id="sStreak"></span></div>
+    <div class="bar"><div id="fill"></div></div>
+    <p class="prompt" id="qPrompt">¿En qué país se habla este idioma?</p>
+    <p class="sample" id="sample"></p>
+    <div class="opts" id="opts"></div>
+    <div class="reveal" id="reveal"><div class="v" id="rV"></div><div class="c" id="rC"></div><div class="f" id="rF"></div><div class="x" id="rX"></div></div>
+    <div class="row"><button class="btn hidden" id="next">Siguiente →</button></div>
+  </section>
+
+  <section id="end" class="card hidden" style="text-align:center">
+    <h2>¡Ronda terminada!</h2>
+    <div class="big" id="eScore"></div>
+    <p id="eMsg"></p>
+    <div id="eWrong" style="text-align:left"></div>
+    <div class="row" style="justify-content:center"><button class="btn" id="again">🔁 Jugar de nuevo</button><button class="btn sec" id="home">Inicio</button></div>
+  </section>
+</main>
+<footer>Países y idiomas cubiertos por Street View (Europa, Américas, Asia, África y Oceanía). Las frases son cortas y sencillas a propósito.</footer>
+
+<script>
+// [nombre, grupo (para distractores parecidos), países, texto, familia/pista]
+const L=[
+["Portugués","rom","🇧🇷 Brasil · 🇵🇹 Portugal · 🇸🇹 Santo Tomé y Príncipe","Bom dia, onde fica a estação de trem?","Romance. Busca la «ç» y las terminaciones «-ção», «-ões», y la «ã»."],
+["Español","rom","🇦🇷 Argentina · 🇲🇽 México · 🇪🇸 España · 🇨🇱 Chile · 🇨🇴 Colombia · 🇵🇪 Perú · 🇺🇾 Uruguay · 🇪🇨 Ecuador · 🇧🇴 Bolivia · 🇬🇹 Guatemala · 🇩🇴 Rep. Dominicana · 🇵🇦 Panamá · 🇵🇷 Puerto Rico","Buenos días, ¿dónde está la estación de tren?","Romance. Signos «¿ ?» y «¡ !» invertidos y la «ñ»."],
+["Francés","rom","🇫🇷 Francia · 🇧🇪 Bélgica · 🇨🇭 Suiza · 🇱🇺 Luxemburgo · 🇲🇨 Mónaco · 🇨🇦 Canadá (Quebec) · 🇸🇳 Senegal · 🇷🇪 Reunión","Bonjour, où est la gare ?","Romance. Acentos «è é ê», «ç» y espacio antes de «?»."],
+["Italiano","rom","🇮🇹 Italia · 🇨🇭 Suiza · 🇸🇲 San Marino","Buongiorno, dov'è la stazione ferroviaria?","Romance. Muchas palabras terminan en vocal y usan «gli», «zz»."],
+["Catalán","rom","🇦🇩 Andorra · 🇪🇸 España (Cataluña)","Bon dia, on és l'estació de tren?","Romance. Apóstrofos, «ny», «l·l» y acentos graves «à è ò»."],
+["Rumano","rom","🇷🇴 Rumania","Bună dimineața, unde este gara?","Romance oriental. Letras «ă â î ș ț»."],
+["Inglés","ger","🇺🇸 EE.UU. · 🇬🇧 Reino Unido · 🇮🇪 Irlanda · 🇨🇦 Canadá · 🇦🇺 Australia · 🇳🇿 Nueva Zelanda · 🇿🇦 Sudáfrica · 🇮🇳 India · 🇸🇬 Singapur · 🇬🇭 Ghana · 🇳🇬 Nigeria · 🇰🇪 Kenia · 🇺🇬 Uganda · 🇧🇼 Botsuana · 🇱🇸 Lesoto · 🇸🇿 Esuatini · 🇧🇲 Bermudas · 🇻🇮 Islas Vírgenes EE.UU. · 🇵🇷 Puerto Rico · 🇬🇺 Guam · 🇦🇸 Samoa Americana · 🇲🇵 Islas Marianas del Norte","Good morning, where is the train station?","Germánica. Sin diacríticos, con «th», «wh» y «ough»."],
+["Alemán","ger","🇩🇪 Alemania · 🇦🇹 Austria · 🇨🇭 Suiza · 🇱🇺 Luxemburgo · 🇱🇮 Liechtenstein","Guten Morgen, wo ist der Bahnhof?","Germánica. Sustantivos con mayúscula, «ß», «ä ö ü» y «sch»."],
+["Neerlandés","ger","🇳🇱 Países Bajos · 🇧🇪 Bélgica · 🇨🇼 Curazao","Goedemorgen, waar is het treinstation?","Germánica. Dobles vocales «aa ee oo uu», «ij» y «oe»."],
+["Noruego","ger","🇳🇴 Noruega","God morgen, hvor er jernbanestasjonen?","Nórdica. Letras «æ ø å». «hvor» = dónde. Muy parecido al danés."],
+["Danés","ger","🇩🇰 Dinamarca · 🇬🇱 Groenlandia","Godmorgen, hvor er banegården?","Nórdica. Letras «æ ø å». «banegård» = estación (en noruego, «stasjon»)."],
+["Sueco","ger","🇸🇪 Suecia","God morgon, var ligger järnvägsstationen?","Nórdica. Letras «å ä ö» (sin «æ» ni «ø»). «var» = dónde."],
+["Islandés","ger","🇮🇸 Islandia","Góðan daginn, hvar er sundlaugin?","Nórdica. Letras únicas «ð» y «þ». Acentos en casi todas las vocales."],
+["Afrikáans","ger","🇿🇦 Sudáfrica","Goeie more, waar is die treinstasie?","Germánica africana. «die» como artículo y «oe». Parecido al neerlandés."],
+["Luxemburgués","ger","🇱🇺 Luxemburgo","Gudde Moien, wou ass d'Gare?","Germánica. Mezcla alemán y francés; apóstrofos como «d'Gare»."],
+["Polaco","sla","🇵🇱 Polonia","Dzień dobry, gdzie jest dworzec kolejowy?","Eslava occidental. Grupos «rz sz cz dz» y letras «ł ą ę ś ż»."],
+["Checo","sla","🇨🇿 Chequia","Dobré ráno, kde je nádraží?","Eslava occidental. «ř», «ě», «ů» y la «č».","" ],
+["Eslovaco","sla","🇸🇰 Eslovaquia","Dobré ráno, kde je železničná stanica?","Eslava occidental. Parecido al checo pero con «ä», «ô» y «ľ»."],
+["Esloveno","sla","🇸🇮 Eslovenia","Dobro jutro, kje je železniška postaja?","Eslava meridional. «č š ž» y «kje» = dónde."],
+["Croata","sla","🇭🇷 Croacia","Dobro jutro, gdje je željeznički kolodvor?","Eslava meridional. «gdje», «ć», «đ» y «kolodvor» = estación."],
+["Serbio","cyr","🇷🇸 Serbia · 🇲🇪 Montenegro","Добро јутро, где је железничка станица?","Eslava meridional. Cirílico con la «ј» y «ћ», «ђ»."],
+["Búlgaro","cyr","🇧🇬 Bulgaria","Добро утро, къде е гарата?","Eslava meridional. Cirílico con «ъ» y artículo pospuesto («гарата»)."],
+["Macedonio","cyr","🇲🇰 Macedonia del Norte","Добро утро, каде е железничката станица?","Eslava meridional. Cirílico con «ќ», «ѓ» y «ѕ»."],
+["Ruso","cyr","🇷🇺 Rusia · 🇰🇿 Kazajistán · 🇰🇬 Kirguistán","Доброе утро, где находится вокзал?","Eslava oriental. Cirílico con «ы», «э», «ё»; sin «ї» ni «є»."],
+["Ucraniano","cyr","🇺🇦 Ucrania","Добрий ранок, де знаходиться вокзал?","Eslava oriental. Cirílico con «ї», «є», «і» y «ґ»."],
+["Mongol","cyr","🇲🇳 Mongolia","Өглөөний мэнд, галт тэрэгний буудал хаана байна?","Cirílico con las letras «ө» y «ү»."],
+["Finés","fin","🇫🇮 Finlandia","Hyvää huomenta, missä on rautatieasema?","Urálica. Muchas dobles vocales y «ä ö», pocas «b, c, f, g»."],
+["Estonio","fin","🇪🇪 Estonia","Tere hommikust, kus on raudteejaam?","Urálica, parienta del finés. Usa «õ» y dobles vocales."],
+["Húngaro","fin","🇭🇺 Hungría","Jó reggelt, hol van a vasútállomás?","Urálica. Acentos dobles «ő ű», «sz», «gy», «ny» y palabras largas."],
+["Letón","bal","🇱🇻 Letonia","Labrīt, kur ir dzelzceļa stacija?","Báltica. Macrones «ā ē ī ū», «ķ ļ ņ ģ»."],
+["Lituano","bal","🇱🇹 Lituania","Labas rytas, kur yra geležinkelio stotis?","Báltica. «ė», «ų», «ą», «ę» y «č š ž»."],
+["Albanés","oth","🇦🇱 Albania","Mirëmëngjes, ku është stacioni i trenit?","Rama propia. «ë» y «ç» muy frecuentes."],
+["Turco","oth","🇹🇷 Turquía","Günaydın, tren istasyonu nerede?","Túrquica. «ı» sin punto, «ş», «ğ» y «ö ü»."],
+["Maltés","oth","🇲🇹 Malta","Bonġu, kif int illum?","Semítica en alfabeto latino. «ġ», «ħ», «għ» y «ż»."],
+["Indonesio","sea","🇮🇩 Indonesia","Selamat pagi, di mana stasiun kereta api?","Austronesia. Latino sencillo, sin tildes. «di mana» = dónde."],
+["Malayo","sea","🇲🇾 Malasia · 🇸🇬 Singapur","Selamat pagi, di mana stesen kereta api?","Austronesia. Casi igual al indonesio («stesen» vs «stasiun»)."],
+["Filipino","sea","🇵🇭 Filipinas","Magandang umaga, nasaan ang istasyon ng tren?","Austronesia. «ng», «ang», «mga» y préstamos del español."],
+["Suajili","afr","🇰🇪 Kenia · 🇺🇬 Uganda","Habari za asubuhi, kituo cha treni kiko wapi?","Bantú. Prefijos «ki-», «m-», «wa-» y «habari»."],
+["Griego","gre","🇬🇷 Grecia","Καλημέρα, πού είναι ο σιδηροδρομικός σταθμός;","Alfabeto griego. El signo «;» es el interrogante."],
+["Hebreo","sem","🇮🇱 Israel","בוקר טוב, איפה תחנת הרכבת?","Semítica, se escribe de derecha a izquierda, sin vocales."],
+["Árabe","sem","🇯🇴 Jordania · 🇦🇪 Emiratos Árabes Unidos · 🇶🇦 Catar · 🇱🇧 Líbano · 🇴🇲 Omán · 🇹🇳 Túnez","صباح الخير، أين محطة القطار؟","Semítica, derecha a izquierda, letras unidas, con puntos."],
+["Hindi","ind","🇮🇳 India","सुप्रभात, रेलवे स्टेशन कहाँ है?","Indoaria. Escritura devanagari con línea horizontal arriba."],
+["Bengalí","ind","🇧🇩 Bangladesh","সুপ্রভাত, রেলস্টেশন কোথায়?","Indoaria. Escritura bengalí, con curvas y línea superior."],
+["Cingalés","ind","🇱🇰 Sri Lanka","ආයුබෝවන්, ඔබට කොහොමද?","Escritura redondeada, con muchas curvas y ganchos."],
+["Tailandés","asia","🇹🇭 Tailandia","สวัสดีตอนเช้า สถานีรถไฟอยู่ที่ไหน","Letras con bucles y sin espacios entre palabras."],
+["Japonés","asia","🇯🇵 Japón","おはようございます、駅はどこですか？","Mezcla de kanji, hiragana (curvo) y katakana (angular)."],
+["Coreano","asia","🇰🇷 Corea del Sur","좋은 아침입니다, 기차역이 어디에 있어요?","Hangul: bloques de círculos y líneas rectas."],
+["Papiamento","rom","🇨🇼 Curazao","Bon dia, kon ta bai?","Criolla de base ibérica con préstamos del neerlandés: «ta», «e», «di» y la «k» en vez de «qu»."],
+["Irlandés","cel","🇮🇪 Irlanda","Dia duit, conas atá tú?","Celta. Muchas «h» tras consonante («bh», «mh», «dh») y acentos agudos «á é í ó ú»."],
+["Galés","cel","🇬🇧 Reino Unido (Gales)","Bore da, ble mae'r orsaf drenau?","Celta. Usa «w» e «y» como vocales y dobles «ll», «dd», «ff»."],
+["Euskera","oth","🇪🇸 España (País Vasco y Navarra)","Egun on, non dago tren-geltokia?","Idioma aislado, sin parientes conocidos. Abunda «tx», «tz», «ts», «k» y «z»."],
+["Gallego","rom","🇪🇸 España (Galicia)","Bo día, onde está a estación de tren?","Romance, entre el portugués y el español. Usa «ñ», «x», «ll» y artículos «o/a»."],
+["Feroés","ger","🇫🇴 Islas Feroe","Góðan morgun, hvussu gongur?","Nórdica insular. Usa «ð», «æ», «ø» y varias vocales con tilde («í ý ú»)."],
+["Dzongkha","ind","🇧🇹 Bután","ཀུ་ཟུ་ཟང་པོ་ལགས། བཀའ་དྲིན་ཆེ།","Escritura tibetana: puntos «་» entre sílabas y trazos que cuelgan de una línea superior."],
+["Khmer","asia","🇰🇭 Camboya","សួស្តី តើស្ថានីយ៍រថភ្លើងនៅឯណា?","Alfabeto jemer: formas redondeadas con ganchos y letras apiladas debajo de otras."],
+["Lao","asia","🇱🇦 Laos","ສະບາຍດີ, ສະຖານີລົດໄຟຢູ່ໃສ?","Alfabeto lao: parecido al tailandés pero más simple y redondeado."],
+["Cantonés","asia","🇭🇰 Hong Kong · 🇲🇴 Macao","早晨，火車站喺邊度？","Chino hablado en Hong Kong y Macao, con caracteres propios como «喺», «嘅» y «冇»."],
+["Tamil","ind","🇮🇳 India · 🇱🇰 Sri Lanka · 🇸🇬 Singapur","காலை வணக்கம், ரயில் நிலையம் எங்கே இருக்கிறது?","Dravidiana. Letras redondeadas con círculos abiertos y la exclusiva «ழ»."],
+["Kazajo","cyr","🇰🇿 Kazajistán","Қайырлы таң, теміржол вокзалы қайда?","Túrquica en cirílico. Letras extra «ә ғ қ ң ө ұ ү һ і»."],
+["Kirguís","cyr","🇰🇬 Kirguistán","Кайырлуу таң, темир жол бекети кайда?","Túrquica en cirílico. Casi igual al kazajo pero con «ө» y «ү» y sin «ә»."],
+["Kinyarwanda","afr","🇷🇼 Ruanda","Mwaramutse, amakuru?","Bantú. Saludos largos, prefijos «umu-», «aba-», «ama-» y «mu-»."],
+["Setsuana","afr","🇧🇼 Botsuana","Dumela, o tsogile jang?","Bantú. «Dumela» como saludo; frecuentes «tsh», «tl» y «go»."],
+["Sesotho","afr","🇱🇸 Lesoto","Khotso, u phela joang?","Bantú. «Khotso» (paz) como saludo; usa «ho», «ea» y «oa»."],
+["Suazi","afr","🇸🇿 Esuatini","Sawubona, unjani?","Bantú nguni, primo del zulú. Saludo «Sawubona» y consonantes «c», «q», «x» (chasquidos)."],
+["Samoano","sea","🇦🇸 Samoa Americana","Talofa, o a mai oe?","Polinesia. Solo 15 letras, muchas vocales seguidas y el saludo «Talofa»."],
+["Chamorro","sea","🇬🇺 Guam · 🇲🇵 Islas Marianas del Norte","Håfa adai, hafa tatatmanu hao?","Austronesia con muchos préstamos del español. Saludo «Håfa adai» y la «å»."],
+["Chino","asia","🇹🇼 Taiwán · 🇸🇬 Singapur","早安，火車站在哪裡？","Solo caracteres (aquí tradicionales), sin hiragana ni hangul."]
+];
+
+// Cada país de cada idioma es una pregunta individual del quiz
+function parseC(str){return str.split(' · ').map(t=>{const m=t.match(/^([\u{1F1E6}-\u{1F1FF}]{2})\s+(.+?)(?:\s*\((.+)\))?$/u);return m?{f:m[1],n:m[2].trim(),note:m[3]||''}:null}).filter(Boolean)}
+const P=[];L.forEach((l,i)=>parseC(l[2]).forEach(c=>P.push({li:i,c})));
+const ALLC=[...new Set(P.map(p=>p.c.n))];
+// países que también hablan el idioma pero no figuran en la lista: se evitan como distractores
+const EXTRA={"Portugués":["Macao"],"Inglés":["Malta","Filipinas","Hong Kong","Malasia"],"Francés":["Líbano","Túnez","Camboya","Laos"],"Ruso":["Ucrania","Mongolia"],"Español":["Guam"],"Árabe":["Israel"]};
+function banned(a){return new Set([...parseC(a[2]).map(c=>c.n),...(EXTRA[a[0]]||[])])}
+
+// [palabras clave, con qué se confunde y cómo distinguirlo, pista de Street View / dato]
+const X={
+"Portugués":["Olá · Obrigado/a","Con el español: el portugués tiene «ão», «nh», «lh», «ç» y «õ».","Brasil: rutas «BR-» y stop «PARE». Portugal: rutas «N-» y autopistas «A»."],
+"Español":["Hola · Gracias","Con portugués y catalán: el español usa «ñ», «ll» y los signos «¿ ¡».","El stop dice «PARE» (Argentina), «ALTO» (México, Perú, Colombia) o «STOP» (España)."],
+"Francés":["Bonjour · Merci","Con italiano y catalán: junta «eau», «ou», «oi» y deja espacio antes de «? ! :».","Stop dice «STOP»; buscá «Mairie», «Boulangerie» y «Sortie»."],
+"Italiano":["Ciao · Grazie","Con español y portugués: dobles consonantes «zz», «cc» y grupos «gli», «gn».","Autopistas verdes con «A»; carteles «Uscita», «Centro», «Stazione»."],
+"Catalán":["Hola · Gràcies","Con el español: «l·l», «ny», «ç» y acentos graves «à è ò».","Carteles «Sortida» en vez de «Salida». Idioma oficial de Andorra."],
+"Rumano":["Bună · Mulțumesc","Es la lengua romance con «ă â î ș ț»; ninguna otra las usa juntas.","Rutas «DN» (drum național); carteles «Primăria», «Benzinărie»."],
+"Inglés":["Hello · Thank you","Sin acentos y con palabras cortas como «the», «of», «and».","Se maneja por la izquierda en Reino Unido, Irlanda, Australia, Nueva Zelanda, Sudáfrica e India."],
+"Alemán":["Hallo · Danke","Con el neerlandés: «ß», «ä ö ü», «sch» y sustantivos con mayúscula.","Autopistas azules con «A»; carteles «Ausfahrt», «Straße», «Bahnhof»."],
+"Neerlandés":["Hallo · Dank je","Con el alemán: dobles vocales «aa ee oo uu», «ij» y «oe», sin «ß».","Carteles «Afrit», «Gemeente»; en Bélgica conviven con el francés."],
+"Noruego":["Hei · Takk","Con danés y sueco: usa «ø» y «å» (el sueco usa «ö» y «ä»); «hvor», «ikke».","Rutas «E6» y «Fv»; topónimos con «-vegen», «-gata», «-fjord»."],
+"Danés":["Hej · Tak","Con el noruego: «banegård», «mig», «efter»; casi no se nota la diferencia escrita.","Carteles «Udkørsel», «-vej», «-gade»; Groenlandia usa danés y groenlandés."],
+"Sueco":["Hej · Tack","Con noruego y danés: usa «ä ö» y nunca «æ ø»; «sj» y «tj» son típicos.","Carteles «Avfart», «-gatan», «-vägen», «Centrum»."],
+"Islandés":["Halló · Takk","Es el único con «þ» y «ð» juntas; casi todas las vocales llevan tilde.","Ruta 1 «Hringvegur»; topónimos con «-fjörður», «-foss», «-vík»."],
+"Afrikáans":["Hallo · Dankie","Con el neerlandés: «die», «nie» (doble negación) y menos letras dobles.","Carteles «Uitgang», «Polisie», «Ingang»."],
+"Luxemburgués":["Moien · Merci","Con el alemán: «ë», «ee», «ou» y palabras francesas como «Gare».","País trilingüe: carteles en luxemburgués, francés y alemán."],
+"Polaco":["Cześć · Dziękuję","Con checo y eslovaco: «ł», «ą», «ę», «ż» y grupos «rz», «sz», «cz».","Carteles «Wyjazd», «ul.» (calle), «Urząd Gminy»."],
+"Checo":["Ahoj · Děkuji","Con eslovaco: «ř», «ě» y «ů» son solo del checo.","Carteles «Nádraží», «náměstí», «Výjezd»."],
+"Eslovaco":["Ahoj · Ďakujem","Con checo: «ä», «ô», «ĺ» y «ľ» son solo del eslovaco.","Carteles «Železničná stanica», «námestie»."],
+"Esloveno":["Živjo · Hvala","Con croata: tiene «č š ž» pero no «ć» ni «đ»; «kje» = dónde.","Carteles «Izhod», «Občina»; conserva el dual gramatical."],
+"Croata":["Bok · Hvala","Con esloveno: tiene «ć», «đ» y «dž»; «gdje» = dónde.","Carteles «Izlaz», «Kolodvor», «Autocesta»."],
+"Serbio":["Здраво · Хвала","Con búlgaro y ruso: «ј», «љ», «њ», «ћ», «ђ», «џ» son exclusivas del serbio.","Carteles con doble alfabeto, cirílico y latino; «Излаз»."],
+"Búlgaro":["Здравей · Благодаря","Con ruso y serbio: «ъ» es vocal, y no tiene «ы» ni «э».","Carteles «Изход», «ул.» (calle), «Автогара»."],
+"Macedonio":["Здраво · Благодарам","Con serbio y búlgaro: «ќ», «ѓ» y «ѕ» son propias del macedonio.","Carteles «Излез», «Железничка станица»."],
+"Ruso":["Привет · Спасибо","Con ucraniano y búlgaro: «ы», «э», «ё» y «щ»; sin «ї» ni «є».","Stop «СТОП»; carteles «Аптека», «Магазин», «ул.»."],
+"Ucraniano":["Привіт · Дякую","Con ruso: «і», «ї», «є» y «ґ»; no usa «ы» ni «э».","Carteles «Аптека», «Вихід», «вул.» (calle)."],
+"Mongol":["Сайн байна уу · Баярлалаа","Con el ruso: «ө» y «ү» son solo del mongol.","Verás «гэр» (yurta) y carteles con el cirílico mongol."],
+"Finés":["Hei · Kiitos","Con estonio: dobles vocales, «ä ö» y terminaciones «-ssa», «-sta», «-lla».","Carteles bilingües finés–sueco, como Helsinki/Helsingfors."],
+"Estonio":["Tere · Aitäh","Con finés: tiene «õ» y «ü», letras que el finés no usa.","Carteles «Välja», «mnt.» (maantee = carretera)."],
+"Húngaro":["Szia · Köszönöm","No se parece a sus vecinos: «ő», «ű», «sz», «cs», «gy», «ny».","Carteles «Kijárat», «utca» (calle), «tér» (plaza)."],
+"Letón":["Sveiki · Paldies","Con lituano: macrones «ā ē ī ū» y cedillas «ķ ļ ņ ģ».","Carteles «Izeja», «iela» (calle)."],
+"Lituano":["Labas · Ačiū","Con letón: «ė», «ų», «ą», «ę», «į» y terminaciones «-as», «-is».","Carteles «Išėjimas», «g.» (gatvė = calle)."],
+"Albanés":["Përshëndetje · Faleminderit","La «ë» aparece por todas partes, junto con «ç», «xh» y «gj».","Carteles «Rruga» (calle), «Shqipëria»."],
+"Turco":["Merhaba · Teşekkürler","Con azerí: «ı» sin punto, «ş», «ğ», «ç» y «ö ü».","Stop «DUR»; carteles «Çıkış», «Belediye», «Otogar»."],
+"Maltés":["Bonġu · Grazzi","Es un idioma semítico en alfabeto latino: «għ», «ħ», «ġ», «ż».","Se maneja por la izquierda; «Triq» = calle."],
+"Indonesio":["Halo · Terima kasih","Con malayo: «stasiun», «kereta api»; sin tildes.","Se maneja por la izquierda; carteles «Keluar», «Jl.» (jalan)."],
+"Malayo":["Helo · Terima kasih","Con indonesio: «stesen», «Lebuhraya» (autopista).","Se maneja por la izquierda; carteles «Jalan», «Keluar»."],
+"Filipino":["Kumusta · Salamat","Mezcla tagalo y español: «ng», «mga», «ang» y «kalye».","Carteles «Bawal» (prohibido), «Barangay»; jeepneys de colores."],
+"Suajili":["Jambo · Asante","Con otras lenguas bantúes: prefijos «ki-», «wa-», «m-» y «karibu» (bienvenido).","Carteles «Karibu», «Barabara»; se maneja por la izquierda."],
+"Griego":["Γεια σου · Ευχαριστώ","Su alfabeto es único; el «;» funciona como signo de pregunta.","Stop «ΣΤΟΠ»; carteles con doble alfabeto, griego y latino."],
+"Hebreo":["שלום · תודה","Con árabe: no une letras y se lee de derecha a izquierda.","Carteles trilingües en hebreo, árabe e inglés."],
+"Árabe":["مرحبا · شكرا","Con hebreo: letras cursivas unidas, con puntos arriba y abajo.","Stop con «قف»; carteles bilingües árabe–inglés."],
+"Hindi":["नमस्ते · धन्यवाद","Con bengalí: línea horizontal continua arriba y palabras como «है» y «का».","Se maneja por la izquierda; carteles en hindi e inglés."],
+"Bengalí":["নমস্কার · ধন্যবাদ","Con hindi: curvas y línea superior interrumpida.","Carteles en bengalí e inglés; rickshaws coloridos."],
+"Cingalés":["ආයුබෝවන් · ස්තූතියි","Con tamil: letras redondeadas con ganchos, sin ángulos.","Carteles trilingües cingalés–tamil–inglés; se maneja por la izquierda."],
+"Tailandés":["สวัสดี · ขอบคุณ","Con lao y jemer: bucles arriba y no deja espacios entre palabras.","Carteles «ถนน» (calle), «ซอย» (callejón); se maneja por la izquierda."],
+"Japonés":["こんにちは · ありがとう","Con chino: mezcla kanji con hiragana «の は です» y katakana angular.","Stop «止まれ»; se maneja por la izquierda."],
+"Coreano":["안녕하세요 · 감사합니다","Con japonés y chino: bloques hangul con círculos «ㅇ» y trazos rectos.","Carteles con nombre en hangul e inglés; se maneja por la derecha."],
+"Papiamento":["Bon dia · Danki","Con español y portugués: «ta» como verbo, «e» como artículo y «k» en vez de «qu».","Curazao: casas de colores pastel en Willemstad y carteles en papiamento y neerlandés."],
+"Irlandés":["Dia duit · Go raibh maith agat","Con el galés: usa «bh», «mh», «dh» y no tiene «w» ni «y».","Carteles bilingües irlandés–inglés; se maneja por la izquierda."],
+"Galés":["Shwmae · Diolch","Con el irlandés: tiene «w» e «y» como vocales y «ll», «dd», «ch».","Carteles bilingües galés–inglés; en el asfalto verás «ARAF» (despacio)."],
+"Euskera":["Kaixo · Eskerrik asko","No se parece a ningún vecino: «tx», «tz», «k», «z» y terminaciones «-ak», «-ek».","País Vasco y Navarra; carteles bilingües, con «Irteera» (salida)."],
+"Gallego":["Ola · Grazas","Con portugués y español: «x» con sonido «sh», «ñ», «ll» y artículos «o/a».","Carteles bilingües en Galicia; «Saída» = salida."],
+"Feroés":["Góðan dag · Takk","Con el islandés: usa «ø» y «æ» y no tiene «þ».","Techos de césped, ovejas y topónimos con «-fjørður» y «-vík»."],
+"Dzongkha":["Kuzu zangpo la · Kadrinche","Con tibetano e hindi: sílabas separadas por puntos y trazos bajo la línea.","Carteles en dzongkha e inglés; en Bután casi no hay semáforos."],
+"Khmer":["Suostei · Arkoun","Con tailandés y lao: letras de base redonda, con pies que se apilan.","Camboya: templos tipo Angkor; carteles en jemer e inglés; se maneja por la derecha."],
+"Lao":["Sabaidee · Khop chai","Con tailandés: letras más redondeadas y simples, con menos bucles.","Laos: río Mekong y templos «wat»; se maneja por la derecha."],
+"Cantonés":["你好 · 唔該","Con mandarín: usa «喺», «嘅», «冇», «邊» y «咗».","Hong Kong: carteles chino–inglés, taxis rojos y manejo por la izquierda; Macao: chino–portugués."],
+"Tamil":["வணக்கம் · நன்றி","Con cingalés: letras más angulosas; la «ழ» es exclusiva del tamil.","Carteles en tamil e inglés en India y Sri Lanka; también es oficial en Singapur."],
+"Kazajo":["Сәлем · Рақмет","Con ruso y kirguís: tiene «ә», «ғ», «қ», «ң», «ұ» y «һ».","Carteles bilingües en kazajo y ruso."],
+"Kirguís":["Салам · Рахмат","Con kazajo: tiene «ө» y «ү» pero no «ә» ni «қ».","Carteles en kirguís y ruso; yurtas y montañas del Tian Shan."],
+"Kinyarwanda":["Muraho · Murakoze","Con suajili: «amakuru» (¿qué tal?) y «murakoze» (gracias).","Ruanda: colinas verdes, mototaxis y carteles en kinyarwanda, francés e inglés."],
+"Setsuana":["Dumela · Ke a leboga","Con sesotho: abundan «tsh», «tl» y «go».","Botsuana: «Pula» es lluvia y también la moneda; se maneja por la izquierda."],
+"Sesotho":["Khotso · Kea leboha","Con setsuana: usa «ho», «ea» y «oa».","Lesoto: sombrero cónico «mokorotlo»; todo el país supera los 1.400 m."],
+"Suazi":["Sawubona · Ngiyabonga","Con zulú: casi igual, con «c», «q», «x» y «ng».","Esuatini es una monarquía absoluta; se maneja por la izquierda."],
+"Samoano":["Talofa · Fa'afetai","Con otras lenguas polinesias: solo 15 letras y muchas vocales seguidas.","Samoa Americana: territorio de EE.UU., carteles en inglés."],
+"Chamorro":["Håfa adai · Si Yu'os ma'åse'","Con filipino: muchos préstamos del español y la «å».","Guam e Islas Marianas: territorios de EE.UU., carteles en inglés."],
+"Chino":["你好 · 謝謝","Con japonés y cantonés: sin kana ni «喺 嘅 冇»; aquí son caracteres tradicionales.","Taiwán usa caracteres tradicionales y stop «停»; Singapur usa simplificados junto con inglés, malayo y tamil."]
+};
+
+// Carteles: [texto, estilo (road=verde, shop=azul, stop=rojo), significado]
+const SIGNS={
+"Portugués":[["PARE","stop","alto"],["Saída","road","salida"]],
+"Español":[["ALTO","stop","alto"],["Salida","road","salida"]],
+"Francés":[["Sortie","road","salida"],["Boulangerie","shop","panadería"]],
+"Italiano":[["Uscita","road","salida"],["Stazione","shop","estación"]],
+"Catalán":[["Sortida","road","salida"],["Ajuntament","shop","ayuntamiento"]],
+"Rumano":[["Ieșire","road","salida"],["Primăria","shop","ayuntamiento"]],
+"Inglés":[["EXIT","road","salida"],["Pharmacy","shop","farmacia"]],
+"Alemán":[["Ausfahrt","road","salida"],["Bahnhof","shop","estación"]],
+"Neerlandés":[["Afrit","road","salida"],["Gemeente","shop","municipio"]],
+"Noruego":[["Sentrum","road","centro"],["Bensinstasjon","shop","gasolinera"]],
+"Danés":[["Udkørsel","road","salida"],["Banegård","shop","estación"]],
+"Sueco":[["Avfart","road","salida"],["Järnvägsstation","shop","estación de tren"]],
+"Islandés":[["Hringvegur","road","ruta circular (Ruta 1)"],["Sundlaug","shop","piscina"]],
+"Afrikáans":[["Padwerke","road","obras en la vía"],["Polisie","shop","policía"]],
+"Luxemburgués":[["Gemeng","shop","municipio"]],
+"Polaco":[["Wyjazd","road","salida"],["Dworzec","shop","estación"]],
+"Checo":[["Nádraží","shop","estación"],["Výjezd","road","salida"]],
+"Eslovaco":[["Výjazd","road","salida"],["Železničná stanica","shop","estación de tren"]],
+"Esloveno":[["Izhod","road","salida"],["Občina","shop","municipio"]],
+"Croata":[["Izlaz","road","salida"],["Kolodvor","shop","estación"]],
+"Serbio":[["Излаз","road","salida"],["Апотека","shop","farmacia"]],
+"Búlgaro":[["Изход","road","salida"],["Спирка","shop","parada"]],
+"Macedonio":[["Излез","road","salida"]],
+"Ruso":[["Выход","road","salida"],["Остановка","shop","parada"]],
+"Ucraniano":[["Вихід","road","salida"],["Зупинка","shop","parada"]],
+"Mongol":[["Гарц","road","salida"],["Хот","shop","ciudad"]],
+"Finés":[["Poistumistie","road","salida"],["Apteekki","shop","farmacia"]],
+"Estonio":[["Välja","road","salida"],["Apteek","shop","farmacia"]],
+"Húngaro":[["Kijárat","road","salida"],["Gyógyszertár","shop","farmacia"]],
+"Letón":[["Izeja","road","salida"],["Aptieka","shop","farmacia"]],
+"Lituano":[["Išėjimas","road","salida"],["Vaistinė","shop","farmacia"]],
+"Albanés":[["Rruga","road","calle"],["Farmaci","shop","farmacia"]],
+"Turco":[["Çıkış","road","salida"],["Eczane","shop","farmacia"]],
+"Maltés":[["Ħruġ","road","salida"],["Triq","road","calle"]],
+"Indonesio":[["Keluar","road","salida"],["Apotek","shop","farmacia"]],
+"Malayo":[["Lebuhraya","road","autopista"],["Stesen","shop","estación"]],
+"Filipino":[["Bawal Tumawid","road","prohibido cruzar"],["Barangay","shop","barrio"]],
+"Suajili":[["Karibu","shop","bienvenido"],["Barabara","road","carretera"]],
+"Griego":[["ΕΞΟΔΟΣ","road","salida"],["ΦΑΡΜΑΚΕΙΟ","shop","farmacia"]],
+"Hebreo":[["יציאה","road","salida"],["בית מרקחת","shop","farmacia"]],
+"Árabe":[["مخرج","road","salida"],["صيدلية","shop","farmacia"]],
+"Hindi":[["निकास","road","salida"],["रेलवे स्टेशन","shop","estación de tren"]],
+"Bengalí":[["প্রস্থান","road","salida"],["ফার্মেসি","shop","farmacia"]],
+"Cingalés":[["පිටවීම","road","salida"]],
+"Tailandés":[["ทางออก","road","salida"],["โรงพยาบาล","shop","hospital"]],
+"Japonés":[["出口","road","salida"],["止まれ","stop","alto"]],
+"Coreano":[["출구","road","salida"],["약국","shop","farmacia"]],
+"Chino":[["捷運","shop","metro (MRT de Taiwán)"],["藥局","shop","farmacia"]],
+"Papiamento":[["Bon bini","shop","bienvenido"]],
+"Irlandés":[["Fáilte","shop","bienvenido"],["Garda","shop","policía"]],
+"Galés":[["ARAF","road","despacio"],["Croeso","shop","bienvenido"]],
+"Euskera":[["Irteera","road","salida"],["Ongi etorri","shop","bienvenido"]],
+"Gallego":[["Benvidos","shop","bienvenidos"],["Concello","shop","ayuntamiento"]],
+"Feroés":[["Vælkomin","shop","bienvenido"]],
+"Dzongkha":[["ཀུ་ཟུ་ཟང་པོ་ལགས།","shop","hola / bienvenido"]],
+"Khmer":[["ចេញ","road","salida"],["ឱសថស្ថាន","shop","farmacia"]],
+"Lao":[["ທາງອອກ","road","salida"],["ຮ້ານຂາຍຢາ","shop","farmacia"]],
+"Tamil":[["வெளியேறு","road","salida"],["மருந்தகம்","shop","farmacia"]],
+"Kazajo":[["Шығу","road","salida"],["Дәріхана","shop","farmacia"]],
+"Kirguís":[["Чыгуу","road","salida"],["Дарыкана","shop","farmacia"]],
+"Kinyarwanda":[["Murakaza neza","shop","bienvenido"]],
+"Setsuana":[["Pula","shop","lluvia (y la moneda de Botsuana)"]],
+"Sesotho":[["Khotso","shop","paz"]],
+"Suazi":[["Sawubona","shop","hola"]],
+"Samoano":[["Talofa","shop","hola / bienvenido"]],
+"Chamorro":[["Håfa Adai","shop","hola / bienvenido"]]
+};
+
+// Frases extra por idioma: [0] "Muchas gracias, hasta mañana." · [1] "¿Cuánto cuesta esto?"
+const MEANS=["Buenos días, ¿dónde está la estación de tren?","Muchas gracias, hasta mañana.","¿Cuánto cuesta esto?"];
+const M0={"Islandés":"Buenos días, ¿dónde está la piscina?","Maltés":"Buenos días, ¿cómo estás hoy?","Papiamento":"Buenos días, ¿cómo andas?","Irlandés":"Hola, ¿cómo estás?","Cingalés":"Hola, ¿cómo estás?","Dzongkha":"Hola. Gracias.","Samoano":"Hola, ¿cómo estás?","Chamorro":"Hola, ¿cómo estás?","Kinyarwanda":"Buenos días, ¿qué tal?","Setsuana":"Hola, ¿cómo amaneciste?","Sesotho":"Hola, ¿cómo estás?","Suazi":"Hola, ¿cómo estás?","Feroés":"Buenos días, ¿cómo va?","Khmer":"Hola, ¿dónde está la estación de tren?","Lao":"Hola, ¿dónde está la estación de tren?"};
+const PH={
+"Portugués":["Muito obrigado, até amanhã.","Quanto custa isto?"],
+"Español":["Muchas gracias, hasta mañana.","¿Cuánto cuesta esto?"],
+"Francés":["Merci beaucoup, à demain.","Combien ça coûte ?"],
+"Italiano":["Grazie mille, a domani.","Quanto costa questo?"],
+"Catalán":["Moltes gràcies, fins demà.","Quant costa això?"],
+"Rumano":["Mulțumesc mult, pe mâine.","Cât costă asta?"],
+"Inglés":["Thank you very much, see you tomorrow.","How much does this cost?"],
+"Alemán":["Vielen Dank, bis morgen.","Wie viel kostet das?"],
+"Neerlandés":["Hartelijk bedankt, tot morgen.","Hoeveel kost dit?"],
+"Noruego":["Tusen takk, vi sees i morgen.","Hvor mye koster dette?"],
+"Danés":["Mange tak, vi ses i morgen.","Hvad koster det her?"],
+"Sueco":["Tack så mycket, vi ses imorgon.","Vad kostar det här?"],
+"Islandés":["Takk fyrir, sjáumst á morgun.","Hvað kostar þetta?"],
+"Afrikáans":["Baie dankie, sien jou môre.","Hoeveel kos dit?"],
+"Luxemburgués":["Villmools Merci, bis muer.","Wéi vill kascht dat?"],
+"Polaco":["Dziękuję bardzo, do jutra.","Ile to kosztuje?"],
+"Checo":["Děkuji moc, uvidíme se zítra.","Kolik to stojí?"],
+"Eslovaco":["Ďakujem pekne, vidíme sa zajtra.","Koľko to stojí?"],
+"Esloveno":["Najlepša hvala, se vidimo jutri.","Koliko to stane?"],
+"Croata":["Hvala puno, vidimo se sutra.","Koliko ovo košta?"],
+"Serbio":["Хвала пуно, видимо се сутра.","Колико ово кошта?"],
+"Búlgaro":["Благодаря много, до утре.","Колко струва това?"],
+"Macedonio":["Благодарам многу, до утре.","Колку чини ова?"],
+"Ruso":["Большое спасибо, до завтра.","Сколько это стоит?"],
+"Ucraniano":["Дуже дякую, до завтра.","Скільки це коштує?"],
+"Mongol":["Баярлалаа, маргааш уулзъя.","Энэ хэд вэ?"],
+"Finés":["Kiitos paljon, nähdään huomenna.","Paljonko tämä maksaa?"],
+"Estonio":["Suur aitäh, näeme homme.","Kui palju see maksab?"],
+"Húngaro":["Köszönöm szépen, holnap találkozunk.","Mennyibe kerül ez?"],
+"Letón":["Paldies, tiekamies rīt.","Cik tas maksā?"],
+"Lituano":["Labai ačiū, iki rytojaus.","Kiek tai kainuoja?"],
+"Albanés":["Faleminderit shumë, shihemi nesër.","Sa kushton kjo?"],
+"Turco":["Çok teşekkürler, yarın görüşürüz.","Bu ne kadar?"],
+"Maltés":["Grazzi ħafna, narawk għada.","Kemm jiswa dan?"],
+"Indonesio":["Terima kasih banyak, sampai jumpa besok.","Ini harganya berapa?"],
+"Malayo":["Terima kasih banyak-banyak, jumpa lagi esok.","Berapa harga ini?"],
+"Filipino":["Maraming salamat, hanggang bukas.","Magkano ito?"],
+"Suajili":["Asante sana, tuonane kesho.","Hii ni bei gani?"],
+"Griego":["Ευχαριστώ πολύ, τα λέμε αύριο.","Πόσο κάνει αυτό;"],
+"Hebreo":["תודה רבה, נתראה מחר.","כמה זה עולה?"],
+"Árabe":["شكرا جزيلا، أراك غدا.","كم سعر هذا؟"],
+"Hindi":["बहुत धन्यवाद, कल मिलते हैं।","यह कितने का है?"],
+"Bengalí":["অনেক ধন্যবাদ, কাল দেখা হবে।","এটার দাম কত?"],
+"Cingalés":["ස්තූතියි, හෙට හමුවෙමු.","මේක කීයද?"],
+"Tailandés":["ขอบคุณมาก แล้วพบกันพรุ่งนี้","อันนี้ราคาเท่าไหร่"],
+"Japonés":["ありがとうございます、また明日。","これはいくらですか？"],
+"Coreano":["감사합니다, 내일 봐요.","이것은 얼마예요?"],
+"Chino":["謝謝，明天見。","這個多少錢？"],
+"Cantonés":["多謝，聽日見。","呢個幾多錢？"],
+"Papiamento":["Masha danki, te mañan.","Kuantu esaki ta kosta?"],
+"Irlandés":["Go raibh míle maith agat, slán go fóill.","Cé mhéad é sin?"],
+"Galés":["Diolch yn fawr, wela i di yfory.","Faint mae hwn yn ei gostio?"],
+"Euskera":["Eskerrik asko, bihar arte.","Zenbat balio du honek?"],
+"Gallego":["Moitas grazas, ata mañá.","Canto custa isto?"],
+"Feroés":["Takk fyri, vit síggjast í morgin.","Hvat kostar hetta?"],
+"Khmer":["អរគុណច្រើន ជួបគ្នាថ្ងៃស្អែក។","នេះថ្លៃប៉ុន្មាន?"],
+"Lao":["ຂອບໃຈຫຼາຍໆ ພົບກັນມື້ອື່ນ.","ອັນນີ້ລາຄາເທົ່າໃດ?"],
+"Tamil":["மிக்க நன்றி, நாளை சந்திப்போம்.","இதன் விலை என்ன?"],
+"Kazajo":["Көп рақмет, ертең кездескенше.","Бұл қанша тұрады?"],
+"Kirguís":["Чоң рахмат, эртең көрүшкөнчө.","Бул канча турат?"],
+"Kinyarwanda":["Murakoze cyane, tuzabonana ejo.","Ni angahe?"],
+"Setsuana":["",""],
+"Sesotho":["Kea leboha haholo, re tla bonana hosane.",""],
+"Suazi":["Ngiyabonga kakhulu, sitawubonana kusasa.",""]
+};
+function pickPhrase(a){
+  const o=[[a[3],M0[a[0]]||MEANS[0]]];
+  (PH[a[0]]||[]).forEach((t,i)=>{if(t)o.push([t,MEANS[i+1]])});
+  curPh=o[Math.floor(Math.random()*o.length)];return curPh[0];
+}
+const $=id=>document.getElementById(id);
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let typeSel='phrase',curSign=null,curPh=null,modeSel='10',q=[],qi=0,score=0,streak=0,maxStreak=0,wrong=[],locked=false;
+const MODES={'10':['🎯 10 preguntas','Ronda rápida',10],'20':['🔥 20 preguntas','Ronda larga',20],'all':['🌐 Todos','Las '+P.length+' combinaciones idioma–país',P.length]};
+function bestKey(){return 'paises_best_'+typeSel+'_'+modeSel}
+function getBest(){try{return parseInt(localStorage.getItem(bestKey()))||0}catch(e){return 0}}
+function setBest(v){try{localStorage.setItem(bestKey(),String(v))}catch(e){}}
+const TYPES={phrase:['💬 Frases','Oraciones cortas'],sign:['🪧 Carteles','Textos de la calle'],mix:['🎲 Mixto','Un poco de cada uno']};
+function renderTypes(){
+  $('types').innerHTML='';
+  Object.keys(TYPES).forEach(k=>{
+    const b=document.createElement('button');b.className='mode'+(k===typeSel?' on':'');
+    b.innerHTML='<b>'+TYPES[k][0]+'</b><span>'+TYPES[k][1]+'</span>';
+    b.onclick=()=>{typeSel=k;renderTypes();showBest()};$('types').appendChild(b);
+  });
+}
+function renderModes(){
+  $('modes').innerHTML='';
+  Object.keys(MODES).forEach(k=>{
+    const b=document.createElement('button');b.className='mode'+(k===modeSel?' on':'');
+    b.innerHTML='<b>'+MODES[k][0]+'</b><span>'+MODES[k][1]+'</span>';
+    b.onclick=()=>{modeSel=k;renderModes();showBest()};$('modes').appendChild(b);
+  });
+}
+function showBest(){const b=getBest();$('best').textContent=b?('Tu mejor puntaje en este modo: '+b+' aciertos'):''}
+function show(id){['start','game','end'].forEach(s=>$(s).classList.toggle('hidden',s!==id))}
+function start(){
+  q=sh(P.map((_,i)=>i)).slice(0,MODES[modeSel][2]);qi=0;score=0;streak=0;maxStreak=0;wrong=[];
+  show('game');ask();
+}
+function ask(){
+  locked=false;const p=P[q[qi]],a=L[p.li],ans=p.c.n;
+  curSign=null;curPh=null;
+  if((typeSel==='sign'||(typeSel==='mix'&&Math.random()<.5))&&SIGNS[a[0]]){
+    const sg=SIGNS[a[0]];curSign=sg[Math.floor(Math.random()*sg.length)];
+    const sp=document.createElement('span');sp.className='sign '+curSign[1];sp.textContent=curSign[0];
+    $('sample').className='sample is-sign';$('sample').replaceChildren(sp);$('qPrompt').textContent='¿En qué país se habla el idioma de este cartel?';
+  }else{$('sample').className='sample';$('sample').textContent=pickPhrase(a);$('qPrompt').textContent='¿En qué país se habla este idioma?'}
+  // distractores: países que NO hablan este idioma; primero de idiomas parecidos
+  const ban=banned(a);
+  const near=[...new Set(L.filter(l=>l!==a&&l[1]===a[1]).flatMap(l=>parseC(l[2]).map(c=>c.n)))].filter(n=>!ban.has(n));
+  let d=sh(near).slice(0,2);
+  const rest=sh(ALLC.filter(n=>!ban.has(n)&&!d.includes(n)));
+  while(d.length<3)d.push(rest.shift());
+  $('opts').innerHTML='';
+  sh([ans,...d]).forEach(n=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=n;b.dataset.n=n;
+    b.onclick=()=>pick(b,n,p);$('opts').appendChild(b);
+  });
+  $('reveal').classList.remove('show');$('next').classList.add('hidden');
+  $('fill').style.width=(100*qi/q.length)+'%';
+  stats();
+}
+function stats(){$('sProg').textContent='Pregunta '+(qi+1)+' / '+q.length;$('sScore').textContent='✔ '+score;$('sStreak').textContent='🔥 Racha: '+streak}
+function pick(btn,o,p){
+  if(locked)return;locked=true;
+  const a=L[p.li],ans=p.c.n,lbl=ans+(p.c.note?' ('+p.c.note+')':'');
+  [...$('opts').children].forEach(b=>{b.disabled=true;if(b.dataset.n===ans)b.classList.add('ok')});
+  if(o===ans){score++;streak++;maxStreak=Math.max(maxStreak,streak);beep(true);burst(btn);$('rV').innerHTML='✅ ¡Correcto! Se habla en '+flagify(p.c.f)+lbl+' (es '+a[0].toLowerCase()+').'}
+  else{btn.classList.add('bad');streak=0;wrong.push(p);beep(false);$('rV').innerHTML='❌ Era '+flagify(p.c.f)+lbl+', no '+o+'. El idioma es '+a[0].toLowerCase()+'.'}
+  $('rC').innerHTML='🗣️ <b>'+a[0]+'</b> se habla en: '+flagify(a[2]);$('rF').textContent='💡 '+a[4];
+  const x=X[a[0]];$('rX').innerHTML=(curSign?'<div><b>🪧 El cartel decía</b>«'+curSign[0]+'» = '+curSign[2]+'</div>':'')+(curPh?'<div><b>💬 La frase decía</b>«'+curPh[1]+'»</div>':'')+(x?'<div><b>🔑 Palabras clave:</b> '+x[0]+'</div><div><b>🆚 No lo confundas:</b> '+x[1]+'</div><div><b>🧭 Street View:</b> '+x[2]+'</div>':'');
+  $('reveal').classList.add('show');
+  $('next').textContent=qi+1>=q.length?'Ver resultado':'Siguiente →';$('next').classList.remove('hidden');
+  stats();$('fill').style.width=(100*(qi+1)/q.length)+'%';
+}
+function finish(){
+  show('end');const n=q.length;
+  $('eScore').textContent=score+' / '+n;
+  const p=score/n;
+  $('eMsg').textContent=(p===1?'¡Perfecto! Sos un políglota de Street View. 🏆':p>=.7?'¡Muy bien! Ya distinguís la mayoría. 👏':p>=.4?'Vas bien, repasá las pistas de cada alfabeto. 📚':'A seguir practicando: cada letrero es una pista. 🧭')+' Mejor racha: '+maxStreak+'.';
+  if(score>getBest()){setBest(score);$('eMsg').textContent+=' 🎉 ¡Nuevo récord!'}
+  $('eWrong').innerHTML=wrong.length?'<h3>A repasar</h3><div class="list">'+wrong.map(w=>{const l=L[w.li];return '<div><b>'+flagify(w.c.f)+w.c.n+(w.c.note?' ('+w.c.note+')':'')+'</b>→ '+l[0]+'<br><small>'+l[4]+(X[l[0]]?' · 🔑 '+X[l[0]][0]:'')+'</small></div>'}).join('')+'</div>':'';
+}
+$('next').onclick=()=>{qi++;qi>=q.length?finish():ask()};
+$('go').onclick=start;$('again').onclick=start;
+$('home').onclick=()=>{show('start');showBest()};
+$('showAll').onclick=()=>{
+  const el=$('all');
+  if(!el.innerHTML)el.innerHTML=L.map(l=>'<div><b>'+l[0]+'</b>'+flagify(l[2])+'<br><small>'+l[3]+'</small></div>').join('');
+  el.classList.toggle('hidden');
+};
+let ac=null;
+function beep(ok){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.type=ok?'triangle':'sawtooth';o.frequency.value=ok?660:180;
+    g.gain.value=.05;o.connect(g);g.connect(ac.destination);o.start();
+    g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.25);o.stop(ac.currentTime+.25);}catch(e){}
+}
+function burst(el){
+  const r=el.getBoundingClientRect(),E=['🎉','✨','⭐','🌍','💫'];
+  for(let i=0;i<14;i++){
+    const n=document.createElement('span');n.className='spark';n.textContent=E[i%E.length];
+    n.style.left=(r.left+r.width/2)+'px';n.style.top=(r.top+r.height/2)+'px';document.body.appendChild(n);
+    const a=Math.random()*Math.PI*2,d=60+Math.random()*90;
+    n.animate([{transform:'translate(0,0) scale(.6)',opacity:1},{transform:'translate('+Math.cos(a)*d+'px,'+(Math.sin(a)*d-40)+'px) scale(1.3) rotate('+(Math.random()*360)+'deg)',opacity:0}],{duration:900,easing:'cubic-bezier(.2,.8,.3,1)'}).onfinish=()=>n.remove();
+  }
+}
+(function(){
+  const g='Aあ한Жع अ ไ Ωñßø łğț文 ქ ա ß é ü Ä ё',bg=document.getElementById('bg');
+  for(let i=0;i<22;i++){
+    const t=document.createElement('span');t.textContent=[...g.replace(/ /g,'')][i%[...g.replace(/ /g,'')].length];
+    t.style.left=(Math.random()*96)+'%';t.style.fontSize=(28+Math.random()*60)+'px';
+    t.style.animationDuration=(18+Math.random()*22)+'s';t.style.animationDelay=(-Math.random()*30)+'s';bg.appendChild(t);
+  }
+})();
+// Banderas reales (imágenes de flagcdn.com) en lugar de emojis, que en Windows se ven como letras
+const flagRx=/[\u{1F1E6}-\u{1F1FF}]{2}/gu;
+function flagify(t){return t.replace(flagRx,e=>{
+  const c=[...e].map(ch=>String.fromCharCode(ch.codePointAt(0)-0x1F1E6+97)).join('');
+  return '<img class="fl" src="https://flagcdn.com/w40/'+c+'.png" srcset="https://flagcdn.com/w80/'+c+'.png 2x" alt="'+e+'" loading="lazy">';
+})}
+(function(){
+  const u=[];L.forEach(l=>(l[2].match(flagRx)||[]).forEach(f=>{if(!u.includes(f))u.push(f)}));
+  const h=u.map(f=>flagify(f)).join(''),t=document.getElementById('flagTrack');
+  t.innerHTML=h+h;t.style.gap='14px';t.style.animationDuration=(u.length*1.1)+'s';
+})();
+document.getElementById("nLang").textContent="🗣️ "+L.length+" idiomas · "+ALLC.length+" países";
+renderTypes();renderModes();showBest();
+</script>
+</body>
+</html>
